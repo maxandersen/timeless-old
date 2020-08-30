@@ -1,0 +1,21 @@
+
+
+quarkus:
+  http:
+    port: 9876
+  banner:
+     enabled: false
+  # Jandex
+  index-dependency:
+    gmail:
+      group-id: com.google.apis
+      artifact-id: google-api-services-gmail
+    google-api-client:
+      group-id: com.google.api-client
+      artifact-id: google-api-client
+    google-http-client:
+      group-id: com.google.http-client
+      artifact-id: google-http-client
+    opencensus-api:
+      group-id: io.opencensus
+      artifact-id: opencensus-api
