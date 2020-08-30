@@ -1,5 +1,9 @@
+# Application configuration
 
+report:
+  excluded_projects: [Personal, Timeless, "Career & Network", Someday, Routines, "Weekly Review"]
 
+# Quarkus configuration
 quarkus:
   http:
     port: 9876

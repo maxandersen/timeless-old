@@ -1,15 +1,10 @@
 package me.escoffier.timeless.todoist;
 
-import me.escoffier.timeless.model.Task;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-import javax.annotation.PostConstruct;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
 
 @RegisterRestClient(baseUri = "https://api.todoist.com")
 @Produces(MediaType.APPLICATION_JSON)
@@ -17,7 +12,6 @@ import java.util.List;
 public interface Todoist {
 
     String TOKEN = "5b41f0e89138743efd5f71b554d119d561b6eeda";
-
 
     @POST
     @Path("/sync/v8/sync")
