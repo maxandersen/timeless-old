@@ -3,6 +3,20 @@
 report:
   excluded_projects: [Personal, Timeless, "Career & Network", Someday, Routines, "Weekly Review"]
 
+github:
+  projects:
+    - eclipse-vertx/vert.x
+    - quarkusio/quarkus
+    - quarkusio/quarkus-images
+    - smallrye/smallrye-mutiny
+    - smallrye/smallrye-reactive-streams-operators
+    - smallrye/smallrye-reactive-messaging
+    - smallrye/smallrye-context-propagation
+    - vert-x3/vertx-amqp-client
+    - eclipse/microprofile-reactive-streams-operators
+    - eclipse/microprofile-reactive-messaging
+  username: cescoffier
+
 # Quarkus configuration
 quarkus:
   http:

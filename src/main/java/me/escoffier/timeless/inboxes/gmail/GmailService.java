@@ -84,7 +84,7 @@ public class GmailService implements Inbox {
             Collection<StarredThread> messages = new ArrayList<>(personal.getStarredMessages());
             messages.addAll(redhat.getStarredMessages());
             fetched = new ArrayList<>(messages);
-            LOGGER.infof("\uD83D\uDEB6  %d starred emails retrieved");
+            LOGGER.infof("\uD83D\uDEB6  %d starred emails retrieved", fetched.size());
             return fetched;
         } catch (Exception e) {
             throw new IllegalStateException("\uD83D\uDC7F Unable to retrieve messages from GMAIL", e);
