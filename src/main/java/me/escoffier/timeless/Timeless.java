@@ -12,7 +12,8 @@ import javax.inject.Inject;
         name = "timeless", mixinStandardHelpOptions = true,
         subcommands = {
                 SyncCommand.class,
-                ReportCompletedCommand.class
+                ReportCompletedCommand.class,
+                WeeklyCommand.class
         }
 )
 public class Timeless implements QuarkusApplication {
@@ -27,7 +28,7 @@ public class Timeless implements QuarkusApplication {
 
     public static void main(String[] args) {
         if (args.length == 0) {
-            args = new String[] { "sync" };
+            args = new String[] { "weekly" };
         }
         Quarkus.run(Timeless.class, args);
     }

@@ -39,7 +39,7 @@ public class GithubService implements Inbox {
         reviews.clear();
         followUps.clear();
 
-        GitHub github = new GitHubBuilder().withOAuthToken(GithubIssues.TOKEN).build();
+        GitHub github = new GitHubBuilder().withOAuthToken(GithubIssues.token()).build();
 
         LOGGER.info("\uD83D\uDEB6  Retrieving Github Issues...");
         issues.addAll(githubIssues.getOpenIssuesAssignedToMe());

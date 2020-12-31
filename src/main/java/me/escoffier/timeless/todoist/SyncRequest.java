@@ -11,9 +11,9 @@ public class SyncRequest {
     public final List<String> resource_types;
 
     private SyncRequest() {
-        token = Todoist.TOKEN;
+        token = Todoist.token();
         sync_token = "*";
-        resource_types = Arrays.asList("items", "projects");
+        resource_types = Arrays.asList("items", "projects", "labels");
     }
 
     public static final SyncRequest INSTANCE = new SyncRequest();

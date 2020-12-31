@@ -3,7 +3,15 @@
 report:
   excluded_projects: [Personal, Timeless, "Career & Network", Someday, Routines, "Weekly Review"]
 
+todoist:
+   token: "5b41f0e89138743efd5f71b554d119d561b6eeda"
+   weekly-label: "This-Week"
+   waiting-label: "Waiting"
+   weekly-review: "Weekly Review"
+   excluded-upcoming-projects: [Routines, "Weekly Review"]
+
 github:
+  token: "c93145173d593174729cb72a4d74d7af42716525"
   projects:
     - eclipse-vertx/vert.x
     - quarkusio/quarkus
@@ -16,6 +24,10 @@ github:
     - eclipse/microprofile-reactive-streams-operators
     - eclipse/microprofile-reactive-messaging
   username: cescoffier
+
+pocket:
+  consumer-key: "57479-e7678a40906f0cf20b3ab989"
+  access-token: "f0d38067-c6cc-0ac1-5959-518ad1"
 
 # Quarkus configuration
 quarkus:

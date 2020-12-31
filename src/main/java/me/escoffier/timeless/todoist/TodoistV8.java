@@ -24,7 +24,7 @@ public interface TodoistV8 {
     CompletedTasksResponse getCompletedTasks(CompletedTaskRequest request);
 
     default String lookupAuth() {
-        return "Bearer " + Todoist.TOKEN;
+        return "Bearer " + Todoist.token();
     }
 
     class CompletedTasksResponse {
@@ -39,7 +39,8 @@ public interface TodoistV8 {
         public String content;
         public long id;
         public long project_id;
-        public long taskId;
+        public long task_id;
+        public Long parent_id;
 
 
         public String title() {

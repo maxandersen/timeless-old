@@ -1,5 +1,6 @@
 package me.escoffier.timeless.inboxes.github;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
@@ -14,10 +15,13 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 public interface GithubIssues {
 
-    String TOKEN = "c93145173d593174729cb72a4d74d7af42716525";
+    static String lookupAuth() {
+        return "token " + token();
+    }
 
-    default String lookupAuth() {
-        return "token " + TOKEN;
+    static String token() {
+        return ConfigProvider.getConfig().getOptionalValue("github.token", String.class)
+                .orElseThrow(() -> new IllegalStateException("Missing `github.token` property"));
     }
 
     /**
