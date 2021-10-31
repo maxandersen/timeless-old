@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd /Users/clement/Development/scripts/timeless
+java -jar target/quarkus-app/quarkus-run.jar $1

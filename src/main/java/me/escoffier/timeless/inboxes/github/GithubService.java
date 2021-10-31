@@ -5,6 +5,8 @@ import me.escoffier.timeless.model.Inbox;
 import me.escoffier.timeless.model.NewTaskRequest;
 import me.escoffier.timeless.model.Task;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.faulttolerance.Retry;
+import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.*;
@@ -12,6 +14,7 @@ import org.kohsuke.github.*;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,33 +43,44 @@ public class GithubService implements Inbox {
         followUps.clear();
 
         GitHub github = new GitHubBuilder().withOAuthToken(GithubIssues.token()).build();
+        LOGGER.infof("\uD83D\uDEB6 Connecting with %s", github.getMyself().getName());
 
+        List<GHPullRequest> prs = getPullRequests(github);
+        LOGGER.infof("\uD83D\uDEB6  %d PRs with pending reviews", reviews.size());
+        checkForReviews(prs);
+        checkForFollowUps(prs);
+    }
+
+    private List<GHPullRequest> getPullRequests(GitHub github) throws InterruptedException {
         LOGGER.info("\uD83D\uDEB6  Retrieving Github Issues...");
         issues.addAll(githubIssues.getOpenIssuesAssignedToMe());
+
         LOGGER.infof("\uD83D\uDEB6  %d GitHub issues retrieved", issues.size());
 
         LOGGER.info("\uD83D\uDEB6  Retrieving Github PRs from selected projects...");
         List<GHPullRequest> prs = new CopyOnWriteArrayList<>();
-        ExecutorService pool = Executors.newFixedThreadPool(8);
+        ExecutorService pool = Executors.newFixedThreadPool(4);
         CountDownLatch latch = new CountDownLatch(repositories.size());
         for (String repo : repositories) {
-            pool.submit(() -> {
-                try {
-                    GHRepository repository = github.getRepository(repo);
-                    prs.addAll(repository.getPullRequests(GHIssueState.OPEN));
-                } catch (IOException e) {
-                    LOGGER.error("☠️ Unable to review pull requests", e);
-                } finally {
-                    latch.countDown();
-                }
-            });
+            pool.submit(() -> getPullRequestForProjects(github, prs, latch, repo));
         }
 
         latch.await(1, TimeUnit.MINUTES);
         pool.shutdownNow();
-        LOGGER.infof("\uD83D\uDEB6  %d PRs with pending reviews", reviews.size());
-        checkForReviews(prs);
-        checkForFollowUps(prs);
+        return prs;
+    }
+
+    @Retry
+    @Timeout(10000)
+    private void getPullRequestForProjects(GitHub github, List<GHPullRequest> prs, CountDownLatch latch, String repo) {
+        try {
+            GHRepository repository = github.getRepository(repo);
+            prs.addAll(repository.getPullRequests(GHIssueState.OPEN));
+        } catch (IOException e) {
+            LOGGER.error("☠️ Unable to review pull requests", e);
+        } finally {
+            latch.countDown();
+        }
     }
 
     private void checkForFollowUps(List<GHPullRequest> prs) throws IOException {
@@ -86,7 +100,8 @@ public class GithubService implements Inbox {
                 // Check if already done
                 boolean reviewAlreadyDone = false;
                 for (GHPullRequestReview review : pr.listReviews()) {
-                    if (review.getUser().getName().equalsIgnoreCase(username)) {
+                    String name = review.getUser().getName();
+                    if (name != null && name.equalsIgnoreCase(username)) {
                         reviewAlreadyDone = true;
                         break;
                     }

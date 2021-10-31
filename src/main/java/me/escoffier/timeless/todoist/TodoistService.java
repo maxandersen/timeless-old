@@ -10,6 +10,7 @@ import org.jboss.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -29,7 +30,7 @@ public class TodoistService implements Backend {
 
     @PostConstruct
     void fetch() {
-        SyncResponse response = todoist.sync(SyncRequest.INSTANCE);
+        SyncResponse response = todoist.sync(new SyncRequest());
 
         inbox = response.projects.stream().filter(p -> p.name.equalsIgnoreCase("Inbox"))
                 .findFirst()

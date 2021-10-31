@@ -28,7 +28,7 @@ public class Timeless implements QuarkusApplication {
 
     public static void main(String[] args) {
         if (args.length == 0) {
-            args = new String[] { "weekly" };
+            args = new String[] { "sync" };
         }
         Quarkus.run(Timeless.class, args);
     }

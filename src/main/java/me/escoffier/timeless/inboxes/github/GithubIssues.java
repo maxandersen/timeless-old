@@ -8,6 +8,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 
 @RegisterRestClient(baseUri = "https://api.github.com/issues")
@@ -15,7 +16,7 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 public interface GithubIssues {
 
-    static String lookupAuth() {
+    default String lookupAuth() {
         return "token " + token();
     }
 
@@ -30,6 +31,5 @@ public interface GithubIssues {
     @GET
     @ClientHeaderParam(name = "Authorization", value = "{lookupAuth}")
     List<Issue> getOpenIssuesAssignedToMe();
-
 
 }

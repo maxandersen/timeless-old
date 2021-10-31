@@ -16,13 +16,13 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
 import static java.time.temporal.ChronoField.HOUR_OF_DAY;
 import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 
-@SuppressWarnings("UnstableApiUsage")
 @ApplicationScoped
 @CommandLine.Command(name = "report", description = "List completed tasks over the past 8 days")
 public class ReportCompletedCommand implements Runnable {
@@ -42,24 +42,55 @@ public class ReportCompletedCommand implements Runnable {
         Map<String, Project> projects = resp.projects;
         List<TodoistV8.CompletedItem> items = resp.items;
 
-        ListMultimap<String, String> report = MultimapBuilder.treeKeys().arrayListValues().build();
+        ListMultimap<String, String> report = MultimapBuilder.treeKeys((Comparator<String>) (o1, o2) -> {
+            if (o1.equalsIgnoreCase("inbox")  && o2.equalsIgnoreCase("inbox")) {
+                return 0;
+            }
+            if (o1.equalsIgnoreCase("inbox")) {
+                return -1;
+            }
+            if (o2.equalsIgnoreCase("inbox")) {
+                return 1;
+            }
+            return o1.compareTo(o2);
+        }).arrayListValues().build();
+
         for (TodoistV8.CompletedItem completed : items) {
             Project project = null;
             if (completed.project_id > 0) {
                 project = projects.get(Long.toString(completed.project_id));
             }
+
+            // Ignore dependabot
+            if (completed.title().startsWith("Review PR Bump ")) {
+                continue;
+            }
+
             if (project == null) {
                 report.put("inbox", completed.title());
             } else if (!excludedProjects.contains(project.name)) {
-                report.put(project.name, completed.title());
+                String pn = getProjectName(projects, project);
+                report.put(pn, completed.title());
             }
         }
 
         report.asMap().forEach((key, value) -> {
             System.out.println("== " + key);
-            value.forEach(s -> System.out.println("\t * " + s));
+            value.forEach(s -> System.out.println("    * " + s));
+            System.out.println();
         });
+    }
 
+    private String getProjectName(Map<String, Project> projects, Project project) {
+        if (project.parent_id == null) {
+            return  project.name;
+        }
+        Project parent = projects.values().stream().filter(p -> Long.toString(p.id).equalsIgnoreCase(project.parent_id)).findAny()
+                .orElse(null);
+        if (parent == null) {
+            return project.name;
+        }
+        return parent.name + "/" + project.name;
     }
 
 }

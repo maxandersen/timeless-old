@@ -15,6 +15,7 @@ import picocli.CommandLine;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.*;

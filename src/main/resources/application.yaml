@@ -1,7 +1,7 @@
 # Application configuration
 
 report:
-  excluded_projects: [Personal, Timeless, "Career & Network", Someday, Routines, "Weekly Review"]
+  excluded_projects: [Personal, Timeless, "Career & Network", Someday, Routines, "Weekly Review", "Reading List", "Someday", "Learning", "Home", "Friends", "Health", "Car", "Purchases", "Hygiene"]
 
 todoist:
    token: "5b41f0e89138743efd5f71b554d119d561b6eeda"
@@ -11,7 +11,8 @@ todoist:
    excluded-upcoming-projects: [Routines, "Weekly Review"]
 
 github:
-  token: "c93145173d593174729cb72a4d74d7af42716525"
+#  token: "c93145173d593174729cb72a4d74d7af42716525"
+  token: "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"
   projects:
     - eclipse-vertx/vert.x
     - quarkusio/quarkus

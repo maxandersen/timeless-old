@@ -99,19 +99,12 @@ public class GmailService implements Inbox {
         }
     }
 
-    public static void main(String[] args) throws GeneralSecurityException, IOException {
+    public static void main(String[] args) {
         GmailService service = new GmailService();
         List<StarredThread> threads = service.fetch();
         threads.forEach(st -> {
             System.out.println(st.message() + " " + st.subject());
         });
-
-        //        StarredThread thread = threads.stream()
-        //                .filter(st -> st.message().getId().equalsIgnoreCase("16e0dd10809b7ab2")).findAny()
-        //                .orElseThrow(NoSuchElementException::new);
-        //
-        //
-        //        service.unflag(thread);
     }
 
 }
