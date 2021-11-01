@@ -9,15 +9,23 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.util.DateTime;
 import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.services.calendar.CalendarScopes;
+import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.*;
+import com.google.api.services.calendar.Calendar;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class Account {
@@ -29,13 +37,20 @@ public class Account {
      * Global instance of the scopes required by this quickstart.
      * If modifying these scopes, delete your previously saved tokens/ folder.
      */
-    private static final List<String> SCOPES = Collections.singletonList(GmailScopes.GMAIL_MODIFY);
+    private static final List<String> GMAIL_SCOPES = Collections.singletonList(GmailScopes.GMAIL_MODIFY);
+
+    /**
+     * Read events.
+     */
+    private static final List<String> CALENDAR_SCOPES = Collections.singletonList(CalendarScopes.CALENDAR_EVENTS_READONLY);
+
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 
     private final String name;
     private final String tokenDirectory;
-    private final Gmail service;
+    private final Gmail gmail;
     private final int port;
+    private final Calendar calendar;
 
     Account(String name, String tokenDirectory, int port) {
         try {
@@ -43,7 +58,10 @@ public class Account {
             this.tokenDirectory = tokenDirectory;
             NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
             this.port = port;
-            this.service = new Gmail.Builder(transport, JSON_FACTORY, getCredentials(transport))
+            this.gmail = new Gmail.Builder(transport, JSON_FACTORY, getCredentials(transport))
+                    .setApplicationName(APPLICATION_NAME)
+                    .build();
+            this.calendar = new Calendar.Builder(transport, JSON_FACTORY, getCredentials(transport))
                     .setApplicationName(APPLICATION_NAME)
                     .build();
         } catch (Exception e) {
@@ -51,10 +69,56 @@ public class Account {
         }
     }
 
+    public Collection<Meeting> getMeetings() {
+        try {
+            LocalDate now = LocalDate.now();
+            LocalDate week = now.plus(7, ChronoUnit.DAYS);
+            List<Event> items = calendar().events().list("primary")
+                    .setOrderBy("startTime")
+                    .setSingleEvents(true)
+                    .setTimeMin(new DateTime(new Date()))
+                    .setTimeMax(new DateTime(week.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()))
+                    .execute().getItems();
+            List<Meeting> meetings = new ArrayList<>();
+            for (Event item : items) {
+                if (isCall(item)  && isAccepted(item)) {
+                    Meeting meeting = new Meeting(this, item.getSummary(), item.getStart().getDateTime().toStringRfc3339());
+                    meetings.add(meeting);
+                } else {
+                    System.out.println("Ignoring " + item.getSummary() + ": " + isAccepted(item) + " / " + isCall(item));
+                }
+            }
+            return meetings;
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to get calendar events", e);
+        }
+    }
+
+    private boolean isCall(Event item) {
+        return item.getHangoutLink() != null  || item.getLocation() != null  && item.getLocation().contains("meet.google.com");
+    }
+
+    private boolean isAccepted(Event item) {
+        if (item.getCreator().isSelf()  && item.getStatus().equalsIgnoreCase("confirmed")) {
+            return true;
+        }
+        List<EventAttendee> attendees = item.getAttendees();
+        if (attendees == null) {
+            return true;
+        }
+        for (EventAttendee attendee : attendees) {
+            if (attendee.isSelf()) {
+                return attendee.getResponseStatus().equalsIgnoreCase("accepted");
+            }
+        }
+        return false;
+    }
+
+
     public Collection<StarredThread> getStarredMessages() throws IOException {
         Map<String, StarredThread> threads = new LinkedHashMap<>();
         String user = "me";
-        ListMessagesResponse list = service().users().messages().list(user)
+        ListMessagesResponse list = gmail().users().messages().list(user)
                 .setQ("is:starred")
                 .setUserId("me")
                 .setMaxResults(1000L)
@@ -64,7 +128,7 @@ public class Account {
             return Collections.emptyList();
         }
         for (Message m : messages) {
-            Message message = service().users().messages().get("me", m.getId())
+            Message message = gmail().users().messages().get("me", m.getId())
                     .setFormat("full")
                     .execute();
             String threadId = message.getThreadId();
@@ -80,8 +144,12 @@ public class Account {
         return name;
     }
 
-    public Gmail service() {
-        return service;
+    public Gmail gmail() {
+        return gmail;
+    }
+
+    public Calendar calendar() {
+        return calendar;
     }
 
     /**
@@ -100,8 +168,11 @@ public class Account {
         GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
         // Build flow and trigger user authorization request.
+        List<String> scopes = new ArrayList<>();
+        scopes.addAll(GMAIL_SCOPES);
+        scopes.addAll(CALENDAR_SCOPES);
         GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-                transport, JSON_FACTORY, clientSecrets, SCOPES)
+                transport, JSON_FACTORY, clientSecrets, scopes)
                 .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(tokenDirectory)))
                 .setAccessType("offline")
                 .build();
@@ -127,9 +198,9 @@ public class Account {
     }
 
     public void unflag(StarredThread starred) throws IOException {
-        service.users().messages().modify("me", starred.message().getId(),
+        gmail.users().messages().modify("me", starred.message().getId(),
                 new ModifyMessageRequest().setRemoveLabelIds(Collections.singletonList("STARRED"))).execute();
-        service.users().threads().modify("me", starred.thread(),
+        gmail.users().threads().modify("me", starred.thread(),
                 new ModifyThreadRequest().setRemoveLabelIds(Collections.singletonList("STARRED"))).execute();
     }
 }

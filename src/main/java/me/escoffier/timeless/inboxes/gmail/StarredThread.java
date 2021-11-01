@@ -5,6 +5,8 @@ import me.escoffier.timeless.model.NewTaskRequest;
 
 import java.util.Calendar;
 
+import static me.escoffier.timeless.helpers.TodayOrTomorrow.todayOrTomorrow;
+
 public class StarredThread {
 
     private final String threadId;
@@ -71,7 +73,7 @@ public class StarredThread {
         public MailTaskRequest(String content, StarredThread thread) {
             super(content,
                     null,
-                    Calendar.getInstance().get(Calendar.HOUR_OF_DAY) >= 18 ? "tomorrow" : "today");
+                    todayOrTomorrow());
             this.thread = thread;
         }
 

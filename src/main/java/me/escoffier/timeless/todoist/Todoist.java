@@ -1,5 +1,6 @@
 package me.escoffier.timeless.todoist;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
@@ -7,6 +8,8 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.List;
 
 @RegisterRestClient(baseUri = "https://api.todoist.com")
 @Produces(MediaType.APPLICATION_JSON)
@@ -46,6 +49,8 @@ public interface Todoist {
         public String due_string;
         public int priority = 1;
         public long project_id;
+        @JsonProperty("label_ids")
+        public List<Long> labels = new ArrayList<>();
 
     }
 }

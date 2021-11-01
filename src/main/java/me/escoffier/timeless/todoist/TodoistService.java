@@ -1,9 +1,6 @@
 package me.escoffier.timeless.todoist;
 
-import me.escoffier.timeless.model.Backend;
-import me.escoffier.timeless.model.NewTaskRequest;
-import me.escoffier.timeless.model.Project;
-import me.escoffier.timeless.model.Task;
+import me.escoffier.timeless.model.*;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -11,6 +8,7 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +23,7 @@ public class TodoistService implements Backend {
     private Project inbox;
     private List<Project> projects;
     private List<Task> tasks;
+    private List<Label> labels;
 
     @Inject @RestClient Todoist todoist;
 
@@ -39,9 +38,10 @@ public class TodoistService implements Backend {
         projects = response.projects;
         response.items.forEach(t -> t.project = getProjectPerId(t.project_id));
         tasks = response.items;
+        labels = response.labels;
     }
 
-    public void addTask(String content, String deadline, Project project) {
+    public void addTask(String content, String deadline, Project project, int priority, List<String> labels) {
         Todoist.TaskCreationRequest request = new Todoist.TaskCreationRequest();
         request.content = content;
         if (project != null) {
@@ -50,11 +50,26 @@ public class TodoistService implements Backend {
         if (deadline != null) {
             request.due_string = deadline;
         }
+        if (priority != -1) {
+            request.priority = priority;
+        }
+        if (! labels.isEmpty()) {
+            request.labels.addAll(getLabelIds(labels));
+        }
         todoist.addTask(request);
     }
 
+    private List<Long> getLabelIds(List<String> labels) {
+        return labels.stream().map(s -> getLabelByName(s).id).collect(Collectors.toList());
+    }
+
+    private Label getLabelByName(String name) {
+        return labels.stream().filter(l -> l.getShortName().trim().equalsIgnoreCase(name)).findAny().orElseThrow();
+    }
+
     public Project getProjectByName(String name) {
-        return projects.stream().filter(p -> p.name.equalsIgnoreCase(name)).findFirst().orElseThrow();
+        return projects.stream().filter(p -> p.name.equalsIgnoreCase(name)).findFirst()
+                .orElseThrow(() -> new RuntimeException("No project named " + name + " in " + projects.stream().map(p -> p.name).collect(Collectors.toList())));
     }
 
     public Project getProjectPerId(long id) {
@@ -88,7 +103,7 @@ public class TodoistService implements Backend {
         if (request.project != null) {
             project = getProjectByName(request.project);
         }
-        addTask(request.content, request.due, project);
+        addTask(request.content, request.due, project, request.priority, request.labels);
     }
 
     @Override

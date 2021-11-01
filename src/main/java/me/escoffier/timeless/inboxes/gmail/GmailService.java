@@ -99,12 +99,4 @@ public class GmailService implements Inbox {
         }
     }
 
-    public static void main(String[] args) {
-        GmailService service = new GmailService();
-        List<StarredThread> threads = service.fetch();
-        threads.forEach(st -> {
-            System.out.println(st.message() + " " + st.subject());
-        });
-    }
-
 }

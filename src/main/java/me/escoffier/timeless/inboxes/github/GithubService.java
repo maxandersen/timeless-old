@@ -1,5 +1,6 @@
 package me.escoffier.timeless.inboxes.github;
 
+import me.escoffier.timeless.helpers.ProjectHints;
 import me.escoffier.timeless.model.Backend;
 import me.escoffier.timeless.model.Inbox;
 import me.escoffier.timeless.model.NewTaskRequest;
@@ -21,16 +22,20 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 
+import static me.escoffier.timeless.helpers.TodayOrTomorrow.todayOrTomorrow;
+
 @ApplicationScoped
 public class GithubService implements Inbox {
 
     private static final Logger LOGGER = Logger.getLogger("Github");
 
-    @Inject @RestClient GithubIssues githubIssues;
+    @RestClient GithubIssues githubIssues;
 
-    @Inject @ConfigProperty(name = "github.projects") List<String> repositories;
+    @ConfigProperty(name = "github.projects") List<String> repositories;
 
-    @Inject @ConfigProperty(name = "github.username") String username;
+    @ConfigProperty(name = "github.username") String username;
+
+    @ConfigProperty(name = "github.hints") ProjectHints hints;
 
     private final List<Issue> issues = new ArrayList<>();
     private final List<Review> reviews = new ArrayList<>();
@@ -136,7 +141,7 @@ public class GithubService implements Inbox {
 
         List<Runnable> actions = new ArrayList<>();
         for (Issue issue : issues) {
-            NewTaskRequest request = issue.asNewTaskRequest();
+            NewTaskRequest request = issue.asNewTaskRequest(hints);
             Optional<Task> maybe = backend.getTaskMatchingRequest(request);
 
             if (!issue.isOpen() && maybe.isPresent()) {
@@ -165,7 +170,7 @@ public class GithubService implements Inbox {
         // 3 - If backend contains issue tasks (existingReviewRequests) without an associated PR in fetched -> complete task
 
         for (Review review : reviews) {
-            NewTaskRequest request = review.asNewTaskRequest();
+            NewTaskRequest request = review.asNewTaskRequest(hints);
             Optional<Task> maybe = backend.getTaskMatchingRequest(request);
 
             if (maybe.isEmpty()) {
@@ -214,12 +219,14 @@ public class GithubService implements Inbox {
 
     private NewTaskRequest createFollowUpTaskRequestForPr(GHPullRequest pr) {
         String content = "Follow Up PR " + pr.getTitle();
-        return new NewTaskRequest(
+        NewTaskRequest request = new NewTaskRequest(
                 content,
                 pr.getHtmlUrl().toExternalForm(),
-                null,
-                null
+                hints.lookup(pr.getHtmlUrl().toExternalForm()),
+                todayOrTomorrow()
         );
+        request.addLabels("Devel");
+        return request;
     }
 
     private boolean isAGithubIssue(Task task) {
