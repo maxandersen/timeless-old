@@ -3,7 +3,7 @@ package me.escoffier.timeless.inboxes.github;
 import me.escoffier.timeless.helpers.ProjectHints;
 import me.escoffier.timeless.model.NewTaskRequest;
 
-import static me.escoffier.timeless.helpers.TodayOrTomorrow.todayOrTomorrow;
+import static me.escoffier.timeless.helpers.DueDates.todayOrTomorrow;
 
 public class Review {
 

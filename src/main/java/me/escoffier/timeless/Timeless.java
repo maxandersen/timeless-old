@@ -13,7 +13,8 @@ import javax.inject.Inject;
         subcommands = {
                 SyncCommand.class,
                 ReportCompletedCommand.class,
-                WeeklyCommand.class
+                WeeklyCommand.class,
+                TalkProjectCommand.class
         }
 )
 public class Timeless implements QuarkusApplication {

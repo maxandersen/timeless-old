@@ -3,9 +3,7 @@ package me.escoffier.timeless.inboxes.gmail;
 import com.google.api.services.gmail.model.Message;
 import me.escoffier.timeless.model.NewTaskRequest;
 
-import java.util.Calendar;
-
-import static me.escoffier.timeless.helpers.TodayOrTomorrow.todayOrTomorrow;
+import static me.escoffier.timeless.helpers.DueDates.todayOrTomorrow;
 
 public class StarredThread {
 

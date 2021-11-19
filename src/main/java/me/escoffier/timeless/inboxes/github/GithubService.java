@@ -14,15 +14,14 @@ import org.kohsuke.github.*;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 
-import static me.escoffier.timeless.helpers.TodayOrTomorrow.todayOrTomorrow;
+import static me.escoffier.timeless.helpers.DueDates.inThreeDays;
+import static me.escoffier.timeless.helpers.DueDates.todayOrTomorrow;
 
 @ApplicationScoped
 public class GithubService implements Inbox {
@@ -223,7 +222,7 @@ public class GithubService implements Inbox {
                 content,
                 pr.getHtmlUrl().toExternalForm(),
                 hints.lookup(pr.getHtmlUrl().toExternalForm()),
-                todayOrTomorrow()
+                inThreeDays()
         );
         request.addLabels("Devel");
         return request;

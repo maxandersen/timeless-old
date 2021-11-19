@@ -1,6 +1,9 @@
 package me.escoffier.timeless.inboxes.gmail;
 
 import me.escoffier.timeless.model.NewTaskRequest;
+import me.escoffier.timeless.model.Task;
+
+import java.util.Optional;
 
 public class Meeting {
 
@@ -29,6 +32,7 @@ public class Meeting {
     public NewTaskRequest asNewTaskRequest(String projectIfAny) {
         return new Meeting.MeetingTaskRequest(this, projectIfAny);
     }
+
 
     public String content() {
         return String.format("Prepare meeting '%s'", title);

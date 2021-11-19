@@ -18,6 +18,7 @@ import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.*;
 import com.google.api.services.calendar.Calendar;
+import org.jboss.logging.Logger;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -32,6 +33,9 @@ public class Account {
 
     private static final String APPLICATION_NAME = "Time Management";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
+
+    private static final Logger LOGGER = Logger.getLogger("Account");
+
 
     /**
      * Global instance of the scopes required by this quickstart.
@@ -85,7 +89,9 @@ public class Account {
                     Meeting meeting = new Meeting(this, item.getSummary(), item.getStart().getDateTime().toStringRfc3339());
                     meetings.add(meeting);
                 } else {
-                    System.out.println("Ignoring " + item.getSummary() + ": " + isAccepted(item) + " / " + isCall(item));
+                    if (! isAccepted(item)) {
+                        LOGGER.infof("Ignoring meeting %s - Event has not been accepted", item.getSummary());
+                    }
                 }
             }
             return meetings;
