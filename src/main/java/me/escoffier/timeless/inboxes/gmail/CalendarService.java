@@ -33,7 +33,9 @@ public class CalendarService implements Inbox {
     ProjectHints hints;
 
     public CalendarService() {
+        LOGGER.info("Setting up personal calendar account");
         personal = new Account("personal", "token-personal", 8888);
+        LOGGER.info("Setting up redhat gmail account");
         redhat = new Account("redhat", "token-redhat", 8889);
     }
 

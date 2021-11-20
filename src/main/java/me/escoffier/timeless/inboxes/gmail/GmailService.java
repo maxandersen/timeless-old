@@ -27,7 +27,9 @@ public class GmailService implements Inbox {
     private List<StarredThread> fetched;
 
     public GmailService() {
+        LOGGER.info("Setting up personal gmail account");
         personal = new Account("personal", "token-personal", 8888);
+        LOGGER.info("Setting up redhat gmail account");
         redhat = new Account("redhat", "token-redhat", 8889);
     }
 
