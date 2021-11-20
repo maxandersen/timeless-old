@@ -31,7 +31,7 @@ import java.util.*;
 
 public class Account {
 
-    private static final String APPLICATION_NAME = "Time Management";
+    private static final String APPLICATION_NAME = "timeless";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
     private static final Logger LOGGER = Logger.getLogger("Account");

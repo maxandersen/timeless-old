@@ -1,0 +1,35 @@
+report:
+  excluded_projects: [Personal, Timeless, "Career & Network", Someday, Routines, "Weekly Review", "Reading List", "Someday", "Learning", "Home", "Friends", "Health", "Car", "Purchases", "Hygiene"]
+
+todoist:
+   token: "todoist-secret-token"
+   weekly-label: "Planned-for-this-week"
+   waiting-label: "Waiting"
+   weekly-review: "Weekly Review"
+   excluded-upcoming-projects: [Routines, "Weekly Review"]
+
+github:
+  token: "github-secret-token"
+  projects:
+    - quarkusio/quarkus
+    - quarkusio/quarkus-images
+    - quarkusio/code.quarkus.io
+    - jbangdev/jbang
+    - jbangdev/jbang.dev
+  hints: |
+    - Quarkus: https://github.com/quarkusio/quarkus
+    - jbang: https://github.com/jbangdev
+  username: maxandersen
+
+pocket:
+  consumer-key: "pocket-secret-token"
+  access-token: "pocket-secret-token"
+
+meetings:
+  ignored-meetings:
+    - Dealing with productivity in Quarkus
+    - Quarkus PM Call
+    - Reactive Foundation - Technical Oversight Committee Meeting
+  hints: |
+    - jbang: lets talk jbang
+    - Quarkus: Quarkus Team call

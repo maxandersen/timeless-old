@@ -64,7 +64,7 @@ public class TodoistService implements Backend {
     }
 
     private Label getLabelByName(String name) {
-        return labels.stream().filter(l -> l.getShortName().trim().equalsIgnoreCase(name)).findAny().orElseThrow();
+        return labels.stream().filter(l -> l.getShortName().trim().equalsIgnoreCase(name)).findAny().orElseThrow(() -> new IllegalStateException("Label not found: " + name));
     }
 
     public Project getProjectByName(String name) {

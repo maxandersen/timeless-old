@@ -1,30 +1,24 @@
-# code-with-quarkus project
+# Timeless
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+Opinionated, flexible but pragmatic way to try conquer the many inboxes in a Red Hatter's life.
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+## Setup
 
-## Running the application in dev mode
+- Get a todoist account and grab API token
+  - precreate labels: mail, Devel + what you add from the example
+- Get a github account and grab API token
+- Setup a google project on google cloud platform (public google not red hat as it won't have access to public gmail)
+  - Enable GMail api and Google Api
+  - Download credentials.json from https://console.cloud.google.com/apis/api/people.googleapis.com/credentials into root of timeless.
+- Get pocket account and create an app to get consumer token and use https://reader.fxneumann.de/plugins/oneclickpocket/auth.php to get access token
+  
 
-You can run your application in dev mode that enables live coding using:
-```
-./mvnw quarkus:dev
-```
+## Build and run timeless
 
-## Packaging and running the application
+`mvn package`
 
-The application can be packaged using `./mvnw package`.
-It produces the `code-with-quarkus-1.0.0-SNAPSHOT-runner.jar` file in the `/target` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/lib` directory.
+Copy `timeless-example.yaml` to `timeless.yaml` (put it next to credentials.json)
 
-The application is now runnable using `java -jar target/code-with-quarkus-1.0.0-SNAPSHOT-runner.jar`.
+`java -Dquarkus.config.locations=timeless.yaml -jar target/timeless-0.1.0-SNAPSHOT.jar`
 
-## Creating a native executable
 
-You can create a native executable using: `./mvnw package -Pnative`.
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: `./mvnw package -Pnative -Dquarkus.native.container-build=true`.
-
-You can then execute your native executable with: `./target/code-with-quarkus-1.0.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/building-native-image.
