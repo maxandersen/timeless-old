@@ -1,21 +1,18 @@
 package me.escoffier.timeless.inboxes.google;
 
+import com.google.api.services.calendar.model.Event;
 import me.escoffier.timeless.model.NewTaskRequest;
 
 public class Meeting {
 
-    private final Account account;
     private final String title;
     private final String date;
+    private final Event item;
 
-    public Meeting(Account account, String title, String date) {
-        this.account = account;
+    public Meeting(Event item, String title, String date) {
+        this.item = item;
         this.title = title;
         this.date = date;
-    }
-
-    public Account getAccount() {
-        return account;
     }
 
     public String getTitle() {
@@ -30,9 +27,12 @@ public class Meeting {
         return new Meeting.MeetingTaskRequest(this, projectIfAny);
     }
 
-
     public String content() {
-        return String.format("Prepare meeting '%s'", title);
+        String d = date;
+        if (date.contains("T")) {
+            d = d.substring(0, date.indexOf("T"));
+        }
+        return String.format("[Prepare meeting '%s (%s)'](%s)", title, d, item.getHtmlLink());
     }
 
     private static class MeetingTaskRequest extends NewTaskRequest {

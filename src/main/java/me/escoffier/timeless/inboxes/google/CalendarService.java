@@ -108,7 +108,7 @@ public class CalendarService implements Inbox {
             List<Meeting> meetings = new ArrayList<>();
             for (Event item : items) {
                 if (isCall(item)  && isAccepted(item)) {
-                    Meeting meeting = new Meeting(account, item.getSummary(), item.getStart().getDateTime().toStringRfc3339());
+                    Meeting meeting = new Meeting(item, item.getSummary(), item.getStart().getDateTime().toStringRfc3339());
                     meetings.add(meeting);
                 } else {
                     if (! isAccepted(item)) {
