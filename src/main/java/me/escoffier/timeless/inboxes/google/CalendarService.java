@@ -1,5 +1,8 @@
 package me.escoffier.timeless.inboxes.google;
 
+import com.google.api.client.util.DateTime;
+import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.EventAttendee;
 import me.escoffier.timeless.helpers.ProjectHints;
 import me.escoffier.timeless.model.Backend;
 import me.escoffier.timeless.model.Inbox;
@@ -10,15 +13,15 @@ import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @ApplicationScoped
 public class CalendarService implements Inbox {
-
-    private static final Logger LOGGER = Logger.getLogger("CalendarService");
-
-    private final Account personal;
-    private final Account redhat;
 
     private List<Meeting> fetched;
 
@@ -28,12 +31,8 @@ public class CalendarService implements Inbox {
     @ConfigProperty(name = "meetings.hints")
     ProjectHints hints;
 
-    public CalendarService() {
-        LOGGER.info("Setting up personal calendar account");
-        personal = new Account("personal", "token-personal", 8888);
-        LOGGER.info("Setting up redhat calendar account");
-        redhat = new Account("redhat", "token-redhat", 8889);
-    }
+    @Inject GoogleAccounts accounts;
+    @Inject Logger logger;
 
     @Override
     public List<Runnable> getPlan(Backend backend) {
@@ -77,17 +76,15 @@ public class CalendarService implements Inbox {
 
     @PostConstruct
     public List<Meeting> fetch() {
-        LOGGER.info("\uD83D\uDEB6  Retrieving meeting from Google Calendars...");
-        try {
-            Collection<Meeting> messages = new ArrayList<>(personal.getMeetings());
-            messages.addAll(redhat.getMeetings());
-            fetched = new ArrayList<>(messages);
-            removeIgnoredMeetings(fetched);
-            LOGGER.infof("\uD83D\uDEB6  %d meetings retrieved", fetched.size());
-            return fetched;
-        } catch (Exception e) {
-            throw new IllegalStateException("\uD83D\uDC7F Unable to retrieve meeting from Google calendar", e);
+        logger.info("\uD83D\uDEB6  Retrieving meeting from Google Calendars...");
+        List<Meeting> messages = new ArrayList<>();
+        for (Account account : accounts.accounts().values()) {
+            messages.addAll(getMeetings(account));
         }
+        fetched = new ArrayList<>(messages);
+        removeIgnoredMeetings(fetched);
+        logger.infof("\uD83D\uDEB6  %d meetings retrieved", fetched.size());
+        return fetched;
     }
 
     private void removeIgnoredMeetings(List<Meeting> fetched) {
@@ -96,6 +93,53 @@ public class CalendarService implements Inbox {
 
     private String getProjectIfAny(Meeting meeting) {
         return hints.lookup(meeting.getTitle());
+    }
+
+    public Collection<Meeting> getMeetings(Account account) {
+        try {
+            LocalDate now = LocalDate.now();
+            LocalDate week = now.plus(7, ChronoUnit.DAYS);
+            List<Event> items = account.calendar().events().list("primary")
+                    .setOrderBy("startTime")
+                    .setSingleEvents(true)
+                    .setTimeMin(new DateTime(new Date()))
+                    .setTimeMax(new DateTime(week.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()))
+                    .execute().getItems();
+            List<Meeting> meetings = new ArrayList<>();
+            for (Event item : items) {
+                if (isCall(item)  && isAccepted(item)) {
+                    Meeting meeting = new Meeting(account, item.getSummary(), item.getStart().getDateTime().toStringRfc3339());
+                    meetings.add(meeting);
+                } else {
+                    if (! isAccepted(item)) {
+                        logger.infof("\uD83D\uDE44  Ignoring meeting %s - Event has not been accepted", item.getSummary());
+                    }
+                }
+            }
+            return meetings;
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to get calendar events", e);
+        }
+    }
+
+    private boolean isCall(Event item) {
+        return item.getHangoutLink() != null  || item.getLocation() != null  && item.getLocation().contains("meet.google.com");
+    }
+
+    private boolean isAccepted(Event item) {
+        if (item.getCreator().isSelf()  && item.getStatus().equalsIgnoreCase("confirmed")) {
+            return true;
+        }
+        List<EventAttendee> attendees = item.getAttendees();
+        if (attendees == null) {
+            return true;
+        }
+        for (EventAttendee attendee : attendees) {
+            if (attendee.isSelf()) {
+                return attendee.getResponseStatus().equalsIgnoreCase("accepted");
+            }
+        }
+        return false;
     }
 
 }

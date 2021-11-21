@@ -9,25 +9,18 @@ import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.util.*;
 
 @ApplicationScoped
 public class GoogleDriveService implements Inbox {
 
-    private static final Logger LOGGER = Logger.getLogger("GoogleDriveService");
-
-    private final Account personal;
-    private final Account redhat;
 
     private List<UnresolvedComment> fetched;
 
-    public GoogleDriveService() {
-        LOGGER.info("Setting up personal gmail account");
-        personal = new Account("personal", "token-personal", 8888);
-        LOGGER.info("Setting up redhat gmail account");
-        redhat = new Account("redhat", "token-redhat", 8889);
-    }
+    @Inject GoogleAccounts accounts;
+    @Inject Logger logger;
 
     @Override
     public List<Runnable> getPlan(Backend backend) {
@@ -81,7 +74,7 @@ public class GoogleDriveService implements Inbox {
             }
             return files;
         } catch (IOException e) {
-            LOGGER.error("Unable to retrieve Google drive document for user " + account.name());
+            logger.error("Unable to retrieve Google drive document for user " + account.name());
             return Collections.emptyList();
         }
     }
@@ -97,7 +90,7 @@ public class GoogleDriveService implements Inbox {
             }
             return list.getComments();
         } catch (IOException e) {
-            LOGGER.errorf("Unable to retrieve comments from document %s (%s) for user %s.",
+            logger.errorf("Unable to retrieve comments from document %s (%s) for user %s.",
                     document.getName(), document.getWebViewLink(), account.name());
             return Collections.emptyList();
         }
@@ -125,22 +118,18 @@ public class GoogleDriveService implements Inbox {
 
     @PostConstruct
     public List<UnresolvedComment> fetch() {
-        LOGGER.info("\uD83D\uDEB6  Retrieving follow-up tasks from Google Drive...");
+        logger.info("\uD83D\uDEB6  Retrieving follow-up tasks from Google Drive...");
         Set<UnresolvedComment> comments = new HashSet<>();
         try {
-            // Personal
-            for (File document : getDocuments(personal)) {
-                List<Comment> list = getComments(personal, document);
-                comments.addAll(extractUnresolvedFollowUp(personal, document, list));
-            }
-            // Red Hat
-            for (File document : getDocuments(redhat)) {
-                List<Comment> list = getComments(redhat, document);
-                comments.addAll(extractUnresolvedFollowUp(redhat, document, list));
+            for (Account account : accounts.accounts().values()) {
+                for (File document : getDocuments(account)) {
+                    List<Comment> list = getComments(account, document);
+                    comments.addAll(extractUnresolvedFollowUp(account, document, list));
+                }
             }
 
             fetched = new ArrayList<>(comments);
-            LOGGER.infof("\uD83D\uDEB6  %d starred emails retrieved", fetched.size());
+            logger.infof("\uD83D\uDEB6  %d unresolved comments from Google Drive retrieved", fetched.size());
             return fetched;
         } catch (Exception e) {
             throw new IllegalStateException("\uD83D\uDC7F Unable to retrieve messages from Google Drive", e);

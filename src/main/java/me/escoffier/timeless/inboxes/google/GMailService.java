@@ -1,5 +1,6 @@
 package me.escoffier.timeless.inboxes.google;
 
+import com.google.api.services.gmail.model.*;
 import me.escoffier.timeless.model.Backend;
 import me.escoffier.timeless.model.Inbox;
 import me.escoffier.timeless.model.NewTaskRequest;
@@ -8,29 +9,20 @@ import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @ApplicationScoped
 public class GMailService implements Inbox {
 
-    private static final Logger LOGGER = Logger.getLogger("GmailService");
-
-    private final Account personal;
-    private final Account redhat;
-
     private List<StarredThread> fetched;
 
-    public GMailService() {
-        LOGGER.info("Setting up personal gmail account");
-        personal = new Account("personal", "token-personal", 8888);
-        LOGGER.info("Setting up redhat gmail account");
-        redhat = new Account("redhat", "token-redhat", 8889);
-    }
+    @Inject
+    Logger logger;
+    @Inject
+    GoogleAccounts accounts;
 
     @Override
     public List<Runnable> getPlan(Backend backend) {
@@ -80,23 +72,69 @@ public class GMailService implements Inbox {
 
     @PostConstruct
     public List<StarredThread> fetch() {
-        LOGGER.info("\uD83D\uDEB6  Retrieving starred emails from Gmail...");
-        try {
-            Collection<StarredThread> messages = new ArrayList<>(personal.getStarredMessages());
-            messages.addAll(redhat.getStarredMessages());
-            fetched = new ArrayList<>(messages);
-            LOGGER.infof("\uD83D\uDEB6  %d starred emails retrieved", fetched.size());
-            return fetched;
-        } catch (Exception e) {
-            throw new IllegalStateException("\uD83D\uDC7F Unable to retrieve messages from GMAIL", e);
+        logger.info("\uD83D\uDEB6  Retrieving starred emails from Gmail...");
+        List<StarredThread> messages = new ArrayList<>();
+        for (Account account : accounts.accounts().values()) {
+            try {
+                messages.addAll(getStarredMessages(account));
+            } catch (IOException e) {
+                throw new IllegalStateException("\uD83D\uDC7F Unable to retrieve messages from Gmail for account " + account.email(), e);
+            }
         }
+        fetched = new ArrayList<>(messages);
+        logger.infof("\uD83D\uDEB6  %d starred emails retrieved", fetched.size());
+        return fetched;
     }
 
-    public void unflag(StarredThread starred) {
+    public Collection<StarredThread> getStarredMessages(Account account) throws IOException {
+        Map<String, StarredThread> threads = new LinkedHashMap<>();
+        String user = "me";
+        ListMessagesResponse list = account.gmail().users().messages().list(user)
+                .setQ("is:starred")
+                .setUserId("me")
+                .setMaxResults(1000L)
+                .execute();
+        List<Message> messages = list.getMessages();
+        if (messages == null) {
+            return Collections.emptyList();
+        }
+        for (Message m : messages) {
+            Message message = account.gmail().users().messages().get("me", m.getId())
+                    .setFormat("full")
+                    .execute();
+            String threadId = message.getThreadId();
+            if (!threads.containsKey(threadId)) {
+                String subject = subject(message);
+                threads.put(threadId, new StarredThread(account, threadId, m, subject, message.getSnippet(), from(message)));
+            }
+        }
+        return threads.values();
+    }
+
+    private String subject(Message message) {
+        return message.getPayload().getHeaders().stream()
+                .filter(h -> h.getName().equalsIgnoreCase("Subject"))
+                .map(MessagePartHeader::getValue)
+                .findAny()
+                .orElse(message.getSnippet());
+    }
+
+    private String from(Message message) {
+        return message.getPayload().getHeaders().stream()
+                .filter(h -> h.getName().equalsIgnoreCase("From"))
+                .map(MessagePartHeader::getValue)
+                .findAny()
+                .orElse("unknown");
+    }
+
+    private void unflag(StarredThread starred) {
         try {
-            starred.account().unflag(starred);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            starred.account().gmail().users().messages().modify("me", starred.message().getId(),
+                    new ModifyMessageRequest().setRemoveLabelIds(Collections.singletonList("STARRED"))).execute();
+            starred.account().gmail().users().threads().modify("me", starred.thread(),
+                    new ModifyThreadRequest().setRemoveLabelIds(Collections.singletonList("STARRED"))).execute();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Unable to unstart email " + starred.link(), e);
         }
     }
 
