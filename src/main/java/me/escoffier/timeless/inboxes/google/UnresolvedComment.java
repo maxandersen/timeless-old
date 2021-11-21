@@ -32,7 +32,9 @@ public class UnresolvedComment {
     }
 
     public NewTaskRequest asNewTaskRequest() {
-        return new UnresolvedComment.UnresolvedCommentTaskRequest(content(), this);
+        NewTaskRequest t = new UnresolvedComment.UnresolvedCommentTaskRequest(content(), this);
+        t.addLabels("timeless/drive");
+        return t;
     }
 
     public String content() {
