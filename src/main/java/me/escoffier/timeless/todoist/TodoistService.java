@@ -41,9 +41,11 @@ public class TodoistService implements Backend {
         labels = response.labels;
     }
 
-    public void addTask(String content, String deadline, Project project, int priority, List<String> labels) {
+    public void addTask(String content, String deadline, Project project, int priority, List<String> labels, String description) {
         Todoist.TaskCreationRequest request = new Todoist.TaskCreationRequest();
         request.content = content;
+        request.description = description;
+
         if (project != null) {
             request.project_id = project.id;
         }
@@ -64,7 +66,14 @@ public class TodoistService implements Backend {
     }
 
     private Label getLabelByName(String name) {
-        return labels.stream().filter(l -> l.getShortName().trim().equalsIgnoreCase(name)).findAny().orElseThrow(() -> new IllegalStateException("Label not found: " + name));
+        var foundLabel = labels.stream().filter(l -> l.getShortName().trim().equalsIgnoreCase(name)).findAny();
+
+        if(foundLabel.isPresent()) {
+            return foundLabel.get();
+        } else {
+            LOGGER.infof("Creating label %s", name);
+            return todoist.createLabel(new Todoist.LabelCreationRequest(name));
+        }
     }
 
     public Project getProjectByName(String name) {
@@ -98,12 +107,12 @@ public class TodoistService implements Backend {
 
     @Override
     public void create(NewTaskRequest request) {
-        LOGGER.infof("\uD83D\uDD04 Creating new task: %s", request.content);
+        LOGGER.infof("\uD83D\uDD04 Creating new task: %s", request.content + ": " + request.description);
         Project project = inbox;
         if (request.project != null) {
             project = getProjectByName(request.project);
         }
-        addTask(request.content, request.due, project, request.priority, request.labels);
+        addTask(request.content, request.due, project, request.priority, request.labels, request.description);
     }
 
     @Override

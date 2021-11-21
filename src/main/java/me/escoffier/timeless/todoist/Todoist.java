@@ -1,6 +1,7 @@
 package me.escoffier.timeless.todoist;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import me.escoffier.timeless.model.Label;
 import me.escoffier.timeless.model.Project;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
@@ -30,6 +31,11 @@ public interface Todoist {
     @Path("/rest/v1/projects")
     @ClientHeaderParam(name = "Authorization", value = "{lookupAuth}")
     Project createProject(ProjectCreationRequest request);
+
+    @POST
+    @Path("/rest/v1/labels")
+    @ClientHeaderParam(name = "Authorization", value = "{lookupAuth}")
+    Label createLabel(LabelCreationRequest request);
 
     @POST
     @Path("/rest/v1/sections")
@@ -84,5 +90,13 @@ public interface Todoist {
         public String name;
     }
 
+    class LabelCreationRequest {
+        public String name;
+
+        public LabelCreationRequest(String name) {
+            this.name = name;
+        }
+        //todo: order, color, favorite
+    }
 
 }

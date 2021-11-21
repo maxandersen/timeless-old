@@ -5,7 +5,7 @@ Opinionated, flexible but pragmatic way to try conquer the many inboxes in a Red
 ## Setup
 
 - Get a todoist account and grab API token
-  - precreate labels: mail, Devel + what you add from the example
+  - precreate projects: Talks, Reading List
 - Get a github account and grab API token
 - Setup a google project on google cloud platform (public google not red hat as it won't have access to public gmail)
   - Enable GMail api and Google Api

@@ -224,7 +224,7 @@ public class GithubService implements Inbox {
                 hints.lookup(pr.getHtmlUrl().toExternalForm()),
                 inThreeDays()
         );
-        request.addLabels("Devel");
+        request.addLabels("Devel","timeless/github");
         return request;
     }
 

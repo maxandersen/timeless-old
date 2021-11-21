@@ -249,14 +249,16 @@ public class Item {
     }
 
     public NewTaskRequest asNewTaskRequest() {
-        String title = getTaskTitle();
 
-        return new NewTaskRequest(
-                title,
+        var x = new NewTaskRequest(
+                getTaskTitle(),
                 "https://app.getpocket.com/read/" + getItem_id(),
                 READING_LIST_PROJECT,
                 null
         );
+        x.addLabels("timeless/pocket");
+
+        return x;
     }
 
     public String getTaskTitle() {

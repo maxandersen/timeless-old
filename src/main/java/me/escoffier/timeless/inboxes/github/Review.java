@@ -35,7 +35,7 @@ public class Review {
                 hints.lookup(html_url),
                 todayOrTomorrow()
         );
-        request.addLabels("Devel");
+        request.addLabels("Devel","timeless/github");
         return request;
     }
 
