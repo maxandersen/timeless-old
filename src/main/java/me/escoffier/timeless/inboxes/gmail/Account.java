@@ -20,6 +20,7 @@ import com.google.api.services.gmail.model.*;
 import com.google.api.services.calendar.Calendar;
 import org.jboss.logging.Logger;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -168,9 +169,16 @@ public class Account {
     private Credential getCredentials(NetHttpTransport transport) throws IOException {
         // Load client secrets.
         InputStream in = GmailService.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
-        if (in == null) {
-            throw new FileNotFoundException("Resource not found: " + CREDENTIALS_FILE_PATH);
+        if(in == null) {
+            // total hack to look up in current dir if not found in project which is just wrong.
+            // todo: make this location actually relative.
+            try {
+                in = new FileInputStream(System.getProperty("user.dir") + CREDENTIALS_FILE_PATH);
+            } catch(FileNotFoundException ffe) {
+                    throw new FileNotFoundException("Resource nor file not found: " + CREDENTIALS_FILE_PATH);
+            }
         }
+
         GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
         // Build flow and trigger user authorization request.

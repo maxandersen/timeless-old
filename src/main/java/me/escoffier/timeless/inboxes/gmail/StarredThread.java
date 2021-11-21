@@ -49,18 +49,25 @@ public class StarredThread {
     }
 
     public NewTaskRequest asNewTaskRequest() {
-        return new MailTaskRequest(content(), this);
+        return new MailTaskRequest(this);
     }
 
-    public String content() {
+    String link() {
         int inboxId = 0;
         if (account.name().equalsIgnoreCase("redhat")) {
             inboxId = 1;
         }
 
         return String
-                .format("[%s](https://mail.google.com/mail/u/%d/#inbox/%s)", subject, inboxId,
-                    message.getId()
+                .format("https://mail.google.com/mail/u/%d/#inbox/%s", inboxId,
+                        message.getId()
+                );
+    }
+
+    public String content() {
+
+        return String
+                .format("[%s](%s)", subject, link()
                 );
     }
 
@@ -68,11 +75,13 @@ public class StarredThread {
 
         private final StarredThread thread;
 
-        public MailTaskRequest(String content, StarredThread thread) {
-            super(content,
+        public MailTaskRequest(StarredThread thread) {
+            super(thread.subject(),
+                    thread.link(),
                     null,
                     todayOrTomorrow());
             this.thread = thread;
+            this.addLabels("timeless/gmail");
         }
 
         @Override

@@ -49,6 +49,7 @@ public class Meeting {
             this.meeting = meeting;
             setPriority(2);
             addLabels("meeting");
+            addLabels("timeless/gcal");
         }
 
         @Override
