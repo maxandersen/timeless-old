@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd /Users/clement/Development/scripts/timeless
-java -jar target/quarkus-app/quarkus-run.jar $1
+cd /Users/clement/Development/scripts/timeless || exit
+java -Dquarkus.config.locations=timeless.yaml -jar target/quarkus-app/quarkus-run.jar $1

@@ -1,4 +1,4 @@
-package me.escoffier.timeless.inboxes.gmail;
+package me.escoffier.timeless.inboxes.google;
 
 import com.google.api.services.gmail.model.Message;
 import me.escoffier.timeless.model.NewTaskRequest;

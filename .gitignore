@@ -38,6 +38,7 @@ release.properties
 weekly.html
 StoredCredential
 
-token*/StoredCredential
+token*/StoredCredential*
 credentials.json
 timeless.yaml
+

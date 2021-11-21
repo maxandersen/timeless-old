@@ -1,20 +1,16 @@
-package me.escoffier.timeless.inboxes.gmail;
+package me.escoffier.timeless.inboxes.google;
 
 import me.escoffier.timeless.helpers.ProjectHints;
 import me.escoffier.timeless.model.Backend;
 import me.escoffier.timeless.model.Inbox;
 import me.escoffier.timeless.model.NewTaskRequest;
 import me.escoffier.timeless.model.Task;
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class CalendarService implements Inbox {

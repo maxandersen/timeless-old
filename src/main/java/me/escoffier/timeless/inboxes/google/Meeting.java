@@ -1,9 +1,6 @@
-package me.escoffier.timeless.inboxes.gmail;
+package me.escoffier.timeless.inboxes.google;
 
 import me.escoffier.timeless.model.NewTaskRequest;
-import me.escoffier.timeless.model.Task;
-
-import java.util.Optional;
 
 public class Meeting {
 

@@ -1,4 +1,4 @@
-package me.escoffier.timeless.inboxes.gmail;
+package me.escoffier.timeless.inboxes.google;
 
 import me.escoffier.timeless.model.Backend;
 import me.escoffier.timeless.model.Inbox;
@@ -10,14 +10,13 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 @ApplicationScoped
-public class GmailService implements Inbox {
+public class GMailService implements Inbox {
 
     private static final Logger LOGGER = Logger.getLogger("GmailService");
 
@@ -26,7 +25,7 @@ public class GmailService implements Inbox {
 
     private List<StarredThread> fetched;
 
-    public GmailService() {
+    public GMailService() {
         LOGGER.info("Setting up personal gmail account");
         personal = new Account("personal", "token-personal", 8888);
         LOGGER.info("Setting up redhat gmail account");

@@ -1,4 +1,4 @@
-package me.escoffier.timeless.inboxes.gmail;
+package me.escoffier.timeless.inboxes.google;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
@@ -14,6 +14,8 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventAttendee;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.*;
@@ -49,6 +51,8 @@ public class Account {
      */
     private static final List<String> CALENDAR_SCOPES = Collections.singletonList(CalendarScopes.CALENDAR_EVENTS_READONLY);
 
+    private static final List<String> DRIVE_SCOPES = Arrays.asList(DriveScopes.DRIVE_FILE, DriveScopes.DRIVE, DriveScopes.DRIVE_METADATA);
+
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 
     private final String name;
@@ -56,6 +60,8 @@ public class Account {
     private final Gmail gmail;
     private final int port;
     private final Calendar calendar;
+    private final Drive drive;
+    private final String email;
 
     Account(String name, String tokenDirectory, int port) {
         try {
@@ -66,11 +72,15 @@ public class Account {
             this.gmail = new Gmail.Builder(transport, JSON_FACTORY, getCredentials(transport))
                     .setApplicationName(APPLICATION_NAME)
                     .build();
+            this.email = this.gmail.users().getProfile("me").execute().getEmailAddress();
             this.calendar = new Calendar.Builder(transport, JSON_FACTORY, getCredentials(transport))
                     .setApplicationName(APPLICATION_NAME)
                     .build();
+            this.drive = new Drive.Builder(transport, JSON_FACTORY, getCredentials(transport))
+                    .setApplicationName(APPLICATION_NAME)
+                    .build();
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to initialize the GMAIL service", e);
+            throw new IllegalStateException("Unable to initialize the Google service", e);
         }
     }
 
@@ -168,7 +178,7 @@ public class Account {
      */
     private Credential getCredentials(NetHttpTransport transport) throws IOException {
         // Load client secrets.
-        InputStream in = GmailService.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
+        InputStream in = Account.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
         if(in == null) {
             // total hack to look up in current dir if not found in project which is just wrong.
             // todo: make this location actually relative.
@@ -185,6 +195,7 @@ public class Account {
         List<String> scopes = new ArrayList<>();
         scopes.addAll(GMAIL_SCOPES);
         scopes.addAll(CALENDAR_SCOPES);
+        scopes.addAll(DRIVE_SCOPES);
         GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
                 transport, JSON_FACTORY, clientSecrets, scopes)
                 .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(tokenDirectory)))
@@ -216,5 +227,13 @@ public class Account {
                 new ModifyMessageRequest().setRemoveLabelIds(Collections.singletonList("STARRED"))).execute();
         gmail.users().threads().modify("me", starred.thread(),
                 new ModifyThreadRequest().setRemoveLabelIds(Collections.singletonList("STARRED"))).execute();
+    }
+
+    public Drive drive() {
+        return drive;
+    }
+
+    public String email() {
+        return email;
     }
 }
