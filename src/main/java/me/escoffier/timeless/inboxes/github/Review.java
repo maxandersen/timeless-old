@@ -27,7 +27,7 @@ public class Review {
         return title;
     }
 
-    public NewTaskRequest asNewTaskRequest(ProjectHints hints) {
+    public NewTaskRequest asNewTaskRequest(ProjectHints hints, String label) {
         String content = getTaskName();
         NewTaskRequest request = new NewTaskRequest(
                 content,
@@ -35,7 +35,7 @@ public class Review {
                 hints.lookup(html_url),
                 todayOrTomorrow()
         );
-        request.addLabels("Devel","timeless/github");
+        request.addLabels("timeless/github");
         return request;
     }
 

@@ -1,9 +1,11 @@
 package me.escoffier.timeless.inboxes.pocket;
 
+import io.quarkus.runtime.annotations.ConfigItem;
 import me.escoffier.timeless.model.Backend;
 import me.escoffier.timeless.model.Inbox;
 import me.escoffier.timeless.model.NewTaskRequest;
 import me.escoffier.timeless.model.Task;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -20,6 +22,8 @@ public class PocketService implements Inbox {
     private static final Logger LOGGER = Logger.getLogger("Pocket");
 
     private ReadList list;
+
+    @ConfigProperty(name="pocket.project", defaultValue = "Reading List") String readingProject;
 
     @Inject @RestClient Pocket pocket;
 
@@ -44,7 +48,7 @@ public class PocketService implements Inbox {
 
         List<Runnable> actions = new ArrayList<>();
         for (Item item : list.getList().values()) {
-            NewTaskRequest request = item.asNewTaskRequest();
+            NewTaskRequest request = item.asNewTaskRequest(readingProject);
             Optional<Task> maybe = backend.getTaskMatchingRequest(request);
             if (maybe.isEmpty()) {
                 // Case 1

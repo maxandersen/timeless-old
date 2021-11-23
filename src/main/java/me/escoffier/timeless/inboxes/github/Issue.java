@@ -29,7 +29,7 @@ public class Issue {
         return "open".equalsIgnoreCase(state);
     }
 
-    public NewTaskRequest asNewTaskRequest(ProjectHints hints) {
+    public NewTaskRequest asNewTaskRequest(ProjectHints hints, String label) {
         String content = getTaskName();
         NewTaskRequest request = new NewTaskRequest(
                 content,
@@ -37,7 +37,7 @@ public class Issue {
                 hints.lookup(html_url),
                 todayOrTomorrow()
         );
-        request.addLabels("Devel","timeless/github");
+        request.addLabels(label,"timeless/github");
         return request;
     }
 

@@ -7,7 +7,6 @@ import java.util.Map;
 
 public class Item {
 
-    public static final String READING_LIST_PROJECT = "Reading List";
     private long item_id;
 
     private long resolved_id;
@@ -248,12 +247,12 @@ public class Item {
         return title.trim();
     }
 
-    public NewTaskRequest asNewTaskRequest() {
+    public NewTaskRequest asNewTaskRequest(String readingProject) {
 
         var x = new NewTaskRequest(
                 getTaskTitle(),
                 "https://app.getpocket.com/read/" + getItem_id(),
-                READING_LIST_PROJECT,
+                readingProject,
                 null
         );
         x.addLabels("timeless/pocket");
