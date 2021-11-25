@@ -141,3 +141,4 @@ public class JiraService implements Inbox {
         return (task.content.startsWith("[Fix ") || task.content.startsWith("[Follow-up ")) && task.content.contains("](" + jiraURL);
     }
 }
+
