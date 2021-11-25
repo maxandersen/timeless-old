@@ -107,7 +107,16 @@
       <artifactId>github-api</artifactId>
       <version>1.135</version>
     </dependency>
-
+    <dependency>
+      <groupId>com.atlassian.jira</groupId>
+      <artifactId>jira-rest-java-client-core</artifactId>
+      <version>5.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.atlassian.fugue</groupId>
+      <artifactId>fugue</artifactId>
+      <version>4.5.1</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -149,4 +158,13 @@
       </plugin>
     </plugins>
   </build>
+
+  <repositories>
+    <!-- Atlassian repo, see https://developer.atlassian.com/server/framework/atlassian-sdk/atlassian-maven-repositories-2818705/ -->
+  <repository>
+    <id>atlassian-public</id>
+    <url>https://packages.atlassian.com/mvn/maven-external/</url>
+  </repository>
+  </repositories>
+
 </project>

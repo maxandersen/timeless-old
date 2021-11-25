@@ -1,5 +1,6 @@
 package me.escoffier.timeless;
 
+import me.escoffier.timeless.inboxes.jira.JiraService;
 import me.escoffier.timeless.model.Backend;
 import me.escoffier.timeless.model.Inbox;
 import me.escoffier.timeless.model.Task;
@@ -21,7 +22,7 @@ public class SyncCommand implements Runnable {
 
     @Inject Backend backend;
 
-    @Inject Instance<Inbox> inboxes;
+    @Inject Instance<JiraService> inboxes;
 
     @Override
     public void run() {
