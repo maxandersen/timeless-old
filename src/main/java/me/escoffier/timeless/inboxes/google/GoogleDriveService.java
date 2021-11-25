@@ -108,7 +108,8 @@ public class GoogleDriveService implements Inbox {
                         }
                     }
                 }
-                if (comment.getContent().contains("+" + account.email()) && !action.equalsIgnoreCase("resolve")) {
+                if ((comment.getContent().contains("+" + account.email()) || comment.getContent().contains("@" + account.email()))
+                        && !action.equalsIgnoreCase("resolve")) {
                     list.add(new UnresolvedComment(file, comment));
                 }
             }

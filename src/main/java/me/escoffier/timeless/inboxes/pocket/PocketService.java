@@ -4,6 +4,7 @@ import me.escoffier.timeless.model.Backend;
 import me.escoffier.timeless.model.Inbox;
 import me.escoffier.timeless.model.NewTaskRequest;
 import me.escoffier.timeless.model.Task;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -18,10 +19,13 @@ import java.util.Optional;
 public class PocketService implements Inbox {
 
     private static final Logger LOGGER = Logger.getLogger("Pocket");
+    private static final String TOO_MANY_ARTICLES = "Review your reading list";
 
     private ReadList list;
 
     @Inject @RestClient Pocket pocket;
+
+    @ConfigProperty(name = "pocket.limit", defaultValue = "100") int limit;
 
     @PostConstruct
     public void fetch() {
@@ -60,6 +64,10 @@ public class PocketService implements Inbox {
                 // 4 - complete the task
                 actions.add(() -> backend.complete(task));
             }
+        }
+
+        if (list.getList().keySet().size() >= limit  && backend.getMatchingTasks(t -> t.content.equalsIgnoreCase(TOO_MANY_ARTICLES)).isEmpty()) {
+            actions.add(() -> backend.create(new NewTaskRequest(TOO_MANY_ARTICLES, Item.READING_LIST_PROJECT, "sunday")));
         }
 
         return actions;
