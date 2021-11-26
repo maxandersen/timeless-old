@@ -22,7 +22,7 @@ public class SyncCommand implements Runnable {
 
     @Inject Backend backend;
 
-    @Inject Instance<JiraService> inboxes;
+    @Inject Instance<Inbox> inboxes;
 
     @Override
     public void run() {
