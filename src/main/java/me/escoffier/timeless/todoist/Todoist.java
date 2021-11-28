@@ -1,5 +1,7 @@
 package me.escoffier.timeless.todoist;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import me.escoffier.timeless.model.Label;
 import me.escoffier.timeless.model.Project;
@@ -65,11 +67,18 @@ public interface Todoist {
         public String content;
         public String due_string;
         public int priority = 1;
+
+        @JsonInclude(JsonInclude.Include.NON_DEFAULT)
         public long project_id;
+
         @JsonProperty("label_ids")
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public List<Long> labels = new ArrayList<>();
 
+        @JsonInclude(JsonInclude.Include.NON_DEFAULT)
         public long section_id;
+
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public String description;
 
     }
