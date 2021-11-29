@@ -37,9 +37,13 @@ public class UnresolvedComment {
         return t;
     }
 
+    String link() {
+        return String.format("%s&disco=%s", document.getWebViewLink(), comment.getId());
+    }
+
     public String content() {
         return String
-                .format("[Pending comment in %s (%s)](%s)", document.getName(), comment.getAnchor(), document.getWebViewLink());
+                .format("[Pending comment in %s (%s)](%s)", document.getName(), comment.getAnchor(), link());
     }
 
     private static class UnresolvedCommentTaskRequest extends NewTaskRequest {
