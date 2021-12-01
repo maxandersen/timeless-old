@@ -100,12 +100,9 @@ public class JiraService implements Inbox {
         List<Runnable> actions = new ArrayList<>();
         for (JiraIssue issue : issues) {
             NewTaskRequest request = issue.asNewTaskRequest(getTaskName(issue), projectHints.get(issue.project),defaultLabel);
-            Optional<Task> maybe = backend.getTaskMatchingRequest(request);
+            Optional<Task> maybe = backend.getMatchingTask(t -> t.content.equals(request.getIdentifier()));
 
-            if (!issue.isOpen() && maybe.isPresent()) {
-                // Case 3
-                actions.add(() -> backend.complete(maybe.get()));
-            } else if (issue.isOpen() && maybe.isEmpty()) {
+            if (issue.isOpen() && maybe.isEmpty()) {
                 // Case 1
                 actions.add(() -> backend.create(request));
             } else if (!issue.isOpen() && maybe.isPresent()) {
@@ -117,7 +114,7 @@ public class JiraService implements Inbox {
             Optional<JiraIssue> thread = issues.stream()
                     .filter(s -> task.content.startsWith("[" + getTaskName(s) + "]"))
                     .findFirst();
-            if (thread.isEmpty()) {
+            if (thread.isEmpty()  && ! task.isCompleted()) {
                 // 4 - complete the task
                 actions.add(() -> backend.complete(task));
             }

@@ -50,7 +50,7 @@ public class CalendarService implements Inbox {
         List<Runnable> actions = new ArrayList<>();
         for (Meeting meeting : fetched) {
             NewTaskRequest request = meeting.asNewTaskRequest(getProjectIfAny(meeting));
-            Optional<Task> maybe = backend.getTaskMatchingRequest(request);
+            Optional<Task> maybe = backend.getMatchingTask(t -> t.content.equals(meeting.content()));
             if (maybe.isEmpty()) {
                 // Case 1
                 actions.add(() -> backend.create(request));

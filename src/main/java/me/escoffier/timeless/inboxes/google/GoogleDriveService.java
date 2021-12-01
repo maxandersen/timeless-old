@@ -96,10 +96,18 @@ public class GoogleDriveService implements Inbox {
         }
     }
 
+    private boolean isResolved(Comment comment) {
+        return comment.getResolved() != null  && comment.getResolved();
+    }
+
+    private boolean isDeleted(Comment comment) {
+        return comment.getDeleted() != null  && comment.getDeleted();
+    }
+
     private List<UnresolvedComment> extractUnresolvedFollowUp(Account account, File file, List<Comment> comments) {
         List<UnresolvedComment> list = new ArrayList<>();
         for (Comment comment : comments) {
-            if (!comment.getResolved() || !comment.getDeleted()) {
+            if (!isResolved(comment) || !isDeleted(comment)) {
                 String action = "";
                 if (comment.getReplies() != null) {
                     for (Reply reply : comment.getReplies()) {

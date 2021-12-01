@@ -101,6 +101,11 @@ public class TodoistService implements Backend {
     }
 
     @Override
+    public Optional<Task> getMatchingTask(Predicate<Task> predicate) {
+        return tasks.stream().filter(predicate).findAny();
+    }
+
+    @Override
     public Optional<Task> getTaskMatchingRequest(NewTaskRequest request) {
         return tasks.stream().filter(t -> t.content.equalsIgnoreCase(request.content)).findFirst();
     }

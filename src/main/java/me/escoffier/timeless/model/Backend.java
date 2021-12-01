@@ -14,6 +14,8 @@ public interface Backend {
 
     List<Task> getMatchingTasks(Predicate<Task> predicate);
 
+    Optional<Task> getMatchingTask(Predicate<Task> predicate);
+
     Optional<Task> getTaskMatchingRequest(NewTaskRequest request);
 
     // Actions:
