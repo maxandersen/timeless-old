@@ -1,8 +1,11 @@
 package me.escoffier.timeless.inboxes.jira;
 
+import com.atlassian.httpclient.api.Request;
+import com.atlassian.jira.rest.client.api.AuthenticationHandler;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import io.quarkus.arc.log.LoggerName;
 import me.escoffier.timeless.model.Backend;
@@ -33,7 +36,9 @@ public class JiraService implements Inbox {
     @ConfigProperty(name = "jira.user")
     String jiraUser;
     @ConfigProperty(name = "jira.password")
-    String jiraPassword;
+    Optional<String> jiraPassword;
+    @ConfigProperty(name = "jira.token")
+    Optional<String> jiraToken;
     @ConfigProperty(name = "jira.label")
     String defaultLabel;
     @ConfigProperty(name = "jira.jql", defaultValue = "project = QUARKUS AND (assignee = currentUser() OR reporter = currentUser()) and resolution = Unresolved")
@@ -52,9 +57,21 @@ public class JiraService implements Inbox {
     @PostConstruct
     public void fetch() throws URISyntaxException {
         issues.clear();
-        JiraRestClient jira = new AsynchronousJiraRestClientFactory()
-                .createWithBasicHttpAuthentication(new URI(jiraURL), jiraUser, jiraPassword);
-        LOGGER.infof("\uD83D\uDEB6 Connecting with %s", jiraUser);
+        URI jirauri = new URI(jiraURL);
+        JiraRestClient jira;
+
+        if(jiraPassword.isPresent()) {
+            LOGGER.infof("\uD83D\uDEB6 Connecting to %s with %s using a password", jirauri, jiraUser);
+
+            jira = new AsynchronousJiraRestClientFactory()
+                    .createWithBasicHttpAuthentication(jirauri, jiraUser, jiraPassword.get());
+        } else if (jiraToken.isPresent()) {
+            LOGGER.infof("\uD83D\uDEB6 Connecting to %s with %s using a token", jirauri, jiraUser);
+            jira = new AsynchronousJiraRestClientFactory().createWithAuthenticationHandler(jirauri, new BearerHttpAuthenticationHandler(jiraToken.get()));
+        } else {
+            throw new IllegalStateException("Neither jira.password nor jira.token set");
+        }
+
         SearchResult searchResultsAll = jira.getSearchClient().searchJql(jiraQuery).claim();
         searchResultsAll.getIssues().forEach(issue -> {
             JiraIssue ji = toIssue(issue);
@@ -65,7 +82,21 @@ public class JiraService implements Inbox {
             }
         });
         LOGGER.infof("\uD83D\uDEB6 %d jira issues", issues.size());
+    }
 
+    public static class BearerHttpAuthenticationHandler implements AuthenticationHandler {
+
+        private static final String AUTHORIZATION_HEADER = "Authorization";
+        private final String token;
+
+        public BearerHttpAuthenticationHandler(final String token) {
+            this.token = token;
+        }
+
+        @Override
+        public void configure(Request.Builder builder) {
+            builder.setHeader(AUTHORIZATION_HEADER, "Bearer " + token);
+        }
     }
 
     private boolean relevant(JiraIssue issue) {
