@@ -35,7 +35,7 @@ public class GMailService implements Inbox {
 
         // 1 - If fetched contains an email without an associated task -> create new task
         // 2 - If fetched contains an email with an uncompleted associated task -> do nothing
-        // 3 - If fetched contains an email with an completed associated task -> remove star (cannot be implemented as you cannot retrieve completed tasks)
+        // 3 - If fetched contains an email with a completed associated task -> remove star (cannot be implemented as you cannot retrieve completed tasks)
         // 4 - If backend contains "email" tasks (existingEmailTasks) without an associated email in fetched -> complete task
 
         List<Runnable> actions = new ArrayList<>();

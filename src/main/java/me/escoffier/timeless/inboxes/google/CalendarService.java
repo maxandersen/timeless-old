@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class CalendarService implements Inbox {
@@ -40,7 +41,7 @@ public class CalendarService implements Inbox {
             fetch();
         }
 
-        List<Task> existingMeetingTasks = backend.getMatchingTasks(this::isMeeting);
+        List<Task> existingMeetingTasks = backend.getAllMatchingTasks(this::isMeeting);
 
         // 1 - If fetched contains a meeting without an associated task -> create new task
         // 2 - If fetched contains a meeting with an uncompleted associated task -> do nothing
@@ -50,7 +51,7 @@ public class CalendarService implements Inbox {
         List<Runnable> actions = new ArrayList<>();
         for (Meeting meeting : fetched) {
             NewTaskRequest request = meeting.asNewTaskRequest(getProjectIfAny(meeting));
-            Optional<Task> maybe = backend.getMatchingTask(t -> t.content.equals(meeting.content()));
+            Optional<Task> maybe = findTask(existingMeetingTasks, request);
             if (maybe.isEmpty()) {
                 // Case 1
                 actions.add(() -> backend.create(request));
@@ -60,14 +61,18 @@ public class CalendarService implements Inbox {
 
 
         for (Task task : existingMeetingTasks) {
-            Optional<Meeting> thread = fetched.stream().filter(s -> s.content().equalsIgnoreCase(task.content)).findFirst();
-            if (thread.isEmpty()) {
+            Optional<Meeting> meeting = fetched.stream().filter(s -> s.content().equalsIgnoreCase(task.content)).findFirst();
+            if (meeting.isEmpty()  && ! task.isCompleted()) {
                 // 4 - complete the task
                 actions.add(() -> backend.complete(task));
             }
         }
 
         return actions;
+    }
+
+    private Optional<Task> findTask(List<Task> existing, NewTaskRequest request) {
+        return existing.stream().filter(t -> t.content.startsWith(request.content)).findFirst();
     }
 
     private boolean isMeeting(Task task) {
