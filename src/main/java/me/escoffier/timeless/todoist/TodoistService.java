@@ -8,12 +8,17 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static java.time.temporal.ChronoField.HOUR_OF_DAY;
+import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 
 @ApplicationScoped
 public class TodoistService implements Backend {
@@ -27,17 +32,28 @@ public class TodoistService implements Backend {
 
     @Inject @RestClient Todoist todoist;
 
+    @Inject @RestClient TodoistV8 v8;
+
+    private List<Task> completed;
+
     @PostConstruct
     void fetch() {
         SyncResponse response = todoist.sync(new SyncRequest());
 
+        ZonedDateTime time = Instant.now().minus(Duration.ofDays(7))
+                .atZone(ZoneOffset.UTC)
+                .with(HOUR_OF_DAY, 0).with(MINUTE_OF_HOUR, 0);
+        String since = DateTimeFormatter.ISO_INSTANT.format(time);
+        TodoistV8.CompletedTasksResponse completedTasks = v8.getCompletedTasks(new TodoistV8.CompletedTaskRequest(since));
+
+        completed = completedTasks.toTasks();
         inbox = response.projects.stream().filter(p -> p.name.equalsIgnoreCase("Inbox"))
                 .findFirst()
                 .orElseThrow();
 
         projects = response.projects;
         response.items.forEach(t -> t.project = getProjectPerId(t.project_id));
-        tasks = response.items;
+        this.tasks = response.items;
         labels = response.labels;
     }
 
@@ -98,6 +114,17 @@ public class TodoistService implements Backend {
     @Override
     public List<Task> getMatchingTasks(Predicate<Task> predicate) {
         return tasks.stream().filter(predicate).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Task> getAllMatchingTasks(Predicate<Task> predicate) {
+        List<Task> active = getMatchingTasks(predicate);
+        List<Task> completed = this.completed.stream().filter(predicate).collect(Collectors.toList());
+
+        List<Task> result = new ArrayList<>();
+        result.addAll(active);
+        result.addAll(completed);
+        return result;
     }
 
     @Override

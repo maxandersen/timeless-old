@@ -2,6 +2,7 @@ package me.escoffier.timeless.todoist;
 
 import me.escoffier.timeless.helpers.Markdown;
 import me.escoffier.timeless.model.Project;
+import me.escoffier.timeless.model.Task;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
@@ -12,6 +13,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RegisterRestClient(baseUri = "https://todoist.com/API/v8/")
 @Produces(MediaType.APPLICATION_JSON)
@@ -32,6 +34,9 @@ public interface TodoistV8 {
         public List<CompletedItem> items;
         public Map<String, Project> projects;
 
+        public List<Task> toTasks() {
+            return items.stream().map(CompletedItem::toTask).collect(Collectors.toList());
+        }
     }
 
     class CompletedItem {
@@ -49,6 +54,20 @@ public interface TodoistV8 {
 
         public TemporalAccessor getCompletionDate() {
             return DateTimeFormatter.ISO_INSTANT.parse(completed_date);
+        }
+
+        public Task toTask() {
+            Task task = new Task();
+            task.content = title();
+            task.id = id;
+            task.checked = 1;
+            if (parent_id != null) {
+                task.parentTaskId = Long.toString(parent_id);
+            }
+            if (project_id > 0) {
+                task.project_id = project_id;
+            }
+            return task;
         }
     }
 
