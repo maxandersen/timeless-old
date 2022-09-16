@@ -7,7 +7,7 @@ import me.escoffier.timeless.review.ReviewHelper;
 import me.escoffier.timeless.todoist.SyncRequest;
 import me.escoffier.timeless.todoist.SyncResponse;
 import me.escoffier.timeless.todoist.Todoist;
-import me.escoffier.timeless.todoist.TodoistV8;
+import me.escoffier.timeless.todoist.TodoistV9;
 import org.apache.commons.io.output.StringBuilderWriter;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -15,12 +15,10 @@ import picocli.CommandLine;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalField;
 import java.util.*;
 
 @ApplicationScoped
@@ -29,7 +27,8 @@ public class WeeklyCommand implements Runnable {
 
     @Inject @RestClient Todoist todoist;
 
-    @Inject @RestClient TodoistV8 todoistV8;
+    @Inject @RestClient
+    TodoistV9 todoistV9;
 
     @ConfigProperty(name = "todoist.weekly-label") String weekly;
 
@@ -63,9 +62,9 @@ public class WeeklyCommand implements Runnable {
 
         for (Task item : response.items) {
 
-            long projectId = item.project_id;
+            String projectId = item.project_id;
             for (Project p : response.projects) {
-                if (p.id == projectId) {
+                if (p.id.equals(projectId)) {
                     item.project = p;
                     break;
                 }
@@ -135,7 +134,7 @@ public class WeeklyCommand implements Runnable {
             throw new UncheckedIOException(e);
         }
 
-        ReviewHelper.prepareWeeklyReview(reviewProjectName, todoist, todoistV8, response.projects);
+        ReviewHelper.prepareWeeklyReview(reviewProjectName, todoist, todoistV9, response.projects);
 
     }
 
@@ -156,8 +155,8 @@ public class WeeklyCommand implements Runnable {
     }
 
     private boolean hasLabel(Task item, Label label) {
-        for (long l : item.labels) {
-            if (l == label.id) {
+        for (String l : item.labels) {
+            if (l.equals(label.id)) {
                 return true;
             }
         }

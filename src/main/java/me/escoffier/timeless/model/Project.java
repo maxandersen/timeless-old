@@ -5,9 +5,9 @@ import com.google.common.base.Objects;
 
 public class Project {
 
-  public long id;
+  public String id;
   public String name;
-  public int is_archived;
+  public boolean is_archived;
   public String parent_id;
 
 
@@ -17,7 +17,7 @@ public class Project {
   }
 
   public boolean isArchived() {
-    return is_archived == 1;
+    return is_archived;
   }
 
   @Override

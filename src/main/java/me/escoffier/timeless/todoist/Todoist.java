@@ -21,36 +21,36 @@ import java.util.List;
 public interface Todoist {
 
     @POST
-    @Path("/sync/v8/sync")
+    @Path("/sync/v9/sync")
     SyncResponse sync(SyncRequest request);
 
     @POST
-    @Path("/rest/v1/tasks")
+    @Path("/rest/v2/tasks")
     @ClientHeaderParam(name = "Authorization", value = "{lookupAuth}")
     void addTask(TaskCreationRequest request);
 
     @POST
-    @Path("/rest/v1/projects")
+    @Path("/rest/v2/projects")
     @ClientHeaderParam(name = "Authorization", value = "{lookupAuth}")
     Project createProject(ProjectCreationRequest request);
 
     @POST
-    @Path("/rest/v1/labels")
+    @Path("/rest/v2/labels")
     @ClientHeaderParam(name = "Authorization", value = "{lookupAuth}")
     Label createLabel(LabelCreationRequest request);
 
     @POST
-    @Path("/rest/v1/sections")
+    @Path("/rest/v1/sections") // Stay on v1, failing on v2.
     @ClientHeaderParam(name = "Authorization", value = "{lookupAuth}")
     Section createSection(SectionCreationRequest request);
 
     @POST
-    @Path("/rest/v1/tasks/{id}/close")
+    @Path("/rest/v2/tasks/{id}/close")
     @ClientHeaderParam(name = "Authorization", value = "{lookupAuth}")
-    void completeTask(@PathParam("id") long id);
+    void completeTask(@PathParam("id") String id);
 
     @POST
-    @Path("/rest/v1/tasks/{id}/reopen")
+    @Path("/rest/v2/tasks/{id}/reopen")
     @ClientHeaderParam(name = "Authorization", value = "{lookupAuth}")
     void uncompleteTask(@PathParam("id") long id);
 
@@ -69,14 +69,14 @@ public interface Todoist {
         public int priority = 1;
 
         @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-        public long project_id;
+        public String project_id;
 
         @JsonProperty("label_ids")
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        public List<Long> labels = new ArrayList<>();
+        public List<String> labels = new ArrayList<>();
 
         @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-        public long section_id;
+        public String section_id;
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public String description;
@@ -85,17 +85,22 @@ public interface Todoist {
 
     class ProjectCreationRequest {
         public String name;
-        public long parent_id;
+        public String parent_id;
     }
 
     class SectionCreationRequest {
         public String name;
         public long project_id;
+
+        public SectionCreationRequest(String name, String project_id) {
+            this.name = name;
+            this.project_id = Long.parseLong(project_id);
+        }
     }
 
     class Section {
-        public long id;
-        public long project_id;
+        public String id;
+        public String project_id;
         public String name;
     }
 

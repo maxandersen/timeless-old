@@ -7,7 +7,6 @@ import org.jboss.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -32,7 +31,8 @@ public class TodoistService implements Backend {
 
     @Inject @RestClient Todoist todoist;
 
-    @Inject @RestClient TodoistV8 v8;
+    @Inject @RestClient
+    TodoistV9 v9;
 
     private List<Task> completed;
 
@@ -44,7 +44,7 @@ public class TodoistService implements Backend {
                 .atZone(ZoneOffset.UTC)
                 .with(HOUR_OF_DAY, 0).with(MINUTE_OF_HOUR, 0);
         String since = DateTimeFormatter.ISO_INSTANT.format(time);
-        TodoistV8.CompletedTasksResponse completedTasks = v8.getCompletedTasks(new TodoistV8.CompletedTaskRequest(since));
+        TodoistV9.CompletedTasksResponse completedTasks = v9.getCompletedTasks(new TodoistV9.CompletedTaskRequest(since));
 
         completed = completedTasks.toTasks();
         inbox = response.projects.stream().filter(p -> p.name.equalsIgnoreCase("Inbox"))
@@ -77,7 +77,7 @@ public class TodoistService implements Backend {
         todoist.addTask(request);
     }
 
-    private List<Long> getLabelIds(List<String> labels) {
+    private List<String> getLabelIds(List<String> labels) {
         return labels.stream().map(s -> getLabelByName(s).id).collect(Collectors.toList());
     }
 
@@ -97,8 +97,8 @@ public class TodoistService implements Backend {
                 .orElseThrow(() -> new RuntimeException("No project named " + name + " in " + projects.stream().map(p -> p.name).collect(Collectors.toList())));
     }
 
-    public Project getProjectPerId(long id) {
-        return projects.stream().filter(p -> p.id == id).findFirst().orElseThrow();
+    public Project getProjectPerId(String id) {
+        return projects.stream().filter(p -> p.id.equals(id)).findFirst().orElseThrow();
     }
 
     @Override
@@ -149,7 +149,7 @@ public class TodoistService implements Backend {
 
     @Override
     public void complete(Task task) {
-        LOGGER.infof("\uD83D\uDD04 Completing task: %s (%d)", task.content, task.id);
+        LOGGER.infof("\uD83D\uDD04 Completing task: %s (%s)", task.content, task.id);
         todoist.completeTask(task.id);
     }
 }

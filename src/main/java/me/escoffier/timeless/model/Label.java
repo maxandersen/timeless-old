@@ -3,7 +3,7 @@ package me.escoffier.timeless.model;
 public class Label {
 
     public String name;
-    public long id;
+    public String id;
 
     public Label() {
         // Used by jsonb

@@ -21,11 +21,12 @@ public class TalkProjectCommand implements Runnable {
     @ConfigProperty(name = "talk.parent-project-name", defaultValue = "Talks")
     String parentProjectName;
 
-    @Inject Backend backend;
+    @Inject
+    Backend backend;
 
     @Override
     public void run() {
-        Scanner sc= new Scanner(System.in);
+        Scanner sc = new Scanner(System.in);
         System.out.println("❓  What's the name of the event?");
         String eventName = sc.nextLine();
 
@@ -68,11 +69,10 @@ public class TalkProjectCommand implements Runnable {
         pcr.parent_id = parent.id;
         Project project = todoist.createProject(pcr);
 
+        System.out.println("project created: " + project.name + " (" + project.id + ")");
         if (requireTravel) {
             System.out.println("⚙️  Creating travel section...");
-            Todoist.SectionCreationRequest scr = new Todoist.SectionCreationRequest();
-            scr.project_id = project.id;
-            scr.name = "Travel";
+            Todoist.SectionCreationRequest scr = new Todoist.SectionCreationRequest("Travel", project.id);
             Todoist.Section section = todoist.createSection(scr);
             // If travel - Estimate budget, Ask for budget, Wait for approval, Book travel, Book hotel, Add calendar slot (day - 7)
             System.out.println("⚙️  Creating travelling tasks...");
@@ -111,9 +111,7 @@ public class TalkProjectCommand implements Runnable {
 
         if (needSubmission) {
             System.out.println("⚙️  Creating CFP section...");
-            Todoist.SectionCreationRequest scr = new Todoist.SectionCreationRequest();
-            scr.project_id = project.id;
-            scr.name = "CFP";
+            Todoist.SectionCreationRequest scr = new Todoist.SectionCreationRequest("CFP", project.id);
             Todoist.Section section = todoist.createSection(scr);
             // If submission (CFP website + deadline) - Write abstract, Submit abstract, Save title/abstract, Wait for acceptance
             System.out.println("⚙️  Creating CFP tasks...");
@@ -137,9 +135,7 @@ public class TalkProjectCommand implements Runnable {
         }
 
         System.out.println("⚙️  Creating Material section...");
-        Todoist.SectionCreationRequest scr = new Todoist.SectionCreationRequest();
-        scr.project_id = project.id;
-        scr.name = "Material";
+        Todoist.SectionCreationRequest scr = new Todoist.SectionCreationRequest("Material", project.id);
         Todoist.Section section = todoist.createSection(scr);
         //  Slide title !!3, Slide audience !!3, Slide talk details !!3 , Slide call for action !!3, Outline !!2,
         // Slides parts A, B, C !!1, Outline demo !!2, Implement demo !!1, Share demo + Add link to slides
@@ -192,9 +188,7 @@ public class TalkProjectCommand implements Runnable {
         System.out.println("⚙️  Material section created!");
 
         System.out.println("⚙️  Creating Preparation section...");
-        scr = new Todoist.SectionCreationRequest();
-        scr.project_id = project.id;
-        scr.name = "Preparation";
+        scr = new Todoist.SectionCreationRequest("Preparation", project.id);
         section = todoist.createSection(scr);
 
         System.out.println("⚙️  Creating preparation tasks...");

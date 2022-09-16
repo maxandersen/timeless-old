@@ -10,15 +10,14 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@RegisterRestClient(baseUri = "https://todoist.com/API/v8/")
+@RegisterRestClient(baseUri = "https://todoist.com/API/v9/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public interface TodoistV8 {
+public interface TodoistV9 {
 
     @POST
     @Path("completed/get_all")
@@ -42,10 +41,10 @@ public interface TodoistV8 {
     class CompletedItem {
         public String completed_date;
         public String content;
-        public long id;
-        public long project_id;
+        public String id;
+        public String project_id;
         public long task_id;
-        public Long parent_id;
+        public String parent_id;
 
 
         public String title() {
@@ -60,11 +59,11 @@ public interface TodoistV8 {
             Task task = new Task();
             task.content = title();
             task.id = id;
-            task.checked = 1;
+            task.checked = true;
             if (parent_id != null) {
-                task.parentTaskId = Long.toString(parent_id);
+                task.parentTaskId = parent_id;
             }
-            if (project_id > 0) {
+            if (project_id != null) {
                 task.project_id = project_id;
             }
             return task;
