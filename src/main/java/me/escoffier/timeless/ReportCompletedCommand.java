@@ -66,7 +66,7 @@ public class ReportCompletedCommand implements Runnable {
 
             if (project == null) {
                 report.put("inbox", completed.title());
-            } else if (!excludedProjects.contains(project.name)) {
+            } else if (!excludedProjects.contains(project.name())) {
                 String pn = getProjectName(projects, project);
                 report.put(pn, completed.title());
             }
@@ -95,15 +95,15 @@ public class ReportCompletedCommand implements Runnable {
     }
 
     private String getProjectName(Map<String, Project> projects, Project project) {
-        if (project.parent_id == null) {
-            return  project.name;
+        if (project.parent() == null) {
+            return  project.name();
         }
-        Project parent = projects.values().stream().filter(p -> p.id.equalsIgnoreCase(project.parent_id)).findAny()
+        Project parent = projects.values().stream().filter(p -> p.id().equalsIgnoreCase(project.parent())).findAny()
                 .orElse(null);
         if (parent == null) {
-            return project.name;
+            return project.name();
         }
-        return parent.name + "/" + project.name;
+        return parent.name() + "/" + project.name();
     }
 
 }

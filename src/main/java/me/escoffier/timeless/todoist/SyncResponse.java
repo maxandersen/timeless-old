@@ -6,10 +6,6 @@ import me.escoffier.timeless.model.Task;
 
 import java.util.List;
 
-public class SyncResponse {
-
-    public List<Task> items;
-    public List<Project> projects;
-    public List<Label> labels;
+public record SyncResponse(List<Task> items, List<Project> projects, List<Label> labels) {
 
 }

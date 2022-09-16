@@ -10,7 +10,6 @@ import org.commonmark.renderer.html.HtmlRenderer;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
@@ -30,7 +29,7 @@ public class ReviewHelper {
             List<Project> projects) {
         Project weeklyReviewProject = null;
         for (Project project : projects) {
-            if (project.name.equalsIgnoreCase(reviewProjectName)) {
+            if (project.name().equalsIgnoreCase(reviewProjectName)) {
                 weeklyReviewProject = project;
                 break;
             }
@@ -47,7 +46,7 @@ public class ReviewHelper {
         TodoistV9.CompletedTasksResponse tasks = todoistV9
                 .getCompletedTasks(new TodoistV9.CompletedTaskRequest(since));
         for (TodoistV9.CompletedItem item : tasks.items) {
-            if (item.project_id.equals(weeklyReviewProject.id) && item.completed_date != null) {
+            if (item.project_id.equals(weeklyReviewProject.id()) && item.completed_date != null) {
                 subTasks.add(item);
             }
         }
@@ -62,6 +61,6 @@ public class ReviewHelper {
         HtmlRenderer renderer = HtmlRenderer.builder().build();
         StringBuilderWriter report = new StringBuilderWriter();
         renderer.render(document, report);
-        Files.write(new File("weekly.html").toPath(), report.toString().getBytes(StandardCharsets.UTF_8));
+        Files.writeString(new File("weekly.html").toPath(), report.toString());
     }
 }

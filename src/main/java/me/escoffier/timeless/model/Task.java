@@ -35,7 +35,7 @@ public class Task {
     }
 
     public boolean isInInbox() {
-        return project == null  || project.name.equalsIgnoreCase("inbox");
+        return project == null  || project.name().equalsIgnoreCase("inbox");
     }
 
     @Override

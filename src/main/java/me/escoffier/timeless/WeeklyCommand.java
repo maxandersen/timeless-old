@@ -45,8 +45,8 @@ public class WeeklyCommand implements Runnable {
     public void run() {
         writer = new StringBuilderWriter();
         SyncResponse response = todoist.sync(SyncRequest.INSTANCE);
-        Label weekly = getWeekly(response.labels);
-        Label wait = getWaitFor(response.labels);
+        Label weekly = getWeekly(response.labels());
+        Label wait = getWaitFor(response.labels());
 
         Map<Project, List<Task>> newTasks = new LinkedHashMap<>();
         Map<Project, List<Task>> waitingTasks = new LinkedHashMap<>();
@@ -60,11 +60,11 @@ public class WeeklyCommand implements Runnable {
         int waitingTaskCount = 0;
         int upcomingTasksCount = 0;
 
-        for (Task item : response.items) {
+        for (Task item : response.items()) {
 
             String projectId = item.project_id;
-            for (Project p : response.projects) {
-                if (p.id.equals(projectId)) {
+            for (Project p : response.projects()) {
+                if (p.id().equals(projectId)) {
                     item.project = p;
                     break;
                 }
@@ -78,8 +78,8 @@ public class WeeklyCommand implements Runnable {
                 }
             }
 
-            if (item.due != null && item.due.getDeadline().isBefore(nextWeek)) {
-                if (item.project == null  || ! excludedProjectsFromUpcoming.contains(item.project.name)) {
+            if (item.due != null && item.due.deadline().isBefore(nextWeek)) {
+                if (item.project == null  || ! excludedProjectsFromUpcoming.contains(item.project.name())) {
                     addTask(upcomingDeadlines, item);
                     upcomingTasksCount = upcomingTasksCount + 1;
                 }
@@ -134,18 +134,18 @@ public class WeeklyCommand implements Runnable {
             throw new UncheckedIOException(e);
         }
 
-        ReviewHelper.prepareWeeklyReview(reviewProjectName, todoist, todoistV9, response.projects);
+        ReviewHelper.prepareWeeklyReview(reviewProjectName, todoist, todoistV9, response.projects());
 
     }
 
     public void print(Map<Project, List<Task>> newTasks) {
         writer.append("\n");
         for (Map.Entry<Project, List<Task>> entry : newTasks.entrySet()) {
-            writer.append(String.format("* %s\n", entry.getKey().name));
+            writer.append(String.format("* %s\n", entry.getKey().name()));
             for (Task task : entry.getValue()) {
                 writer.append(String.format("\t * %s", task.content));
                 if (task.due != null) {
-                    writer.append(String.format(" (due _%s_)\n", DateTimeFormatter.ISO_LOCAL_DATE.format(task.due.getDeadline())));
+                    writer.append(String.format(" (due _%s_)\n", DateTimeFormatter.ISO_LOCAL_DATE.format(task.due.deadline())));
                 } else {
                     writer.append("\n");
                 }
@@ -156,7 +156,7 @@ public class WeeklyCommand implements Runnable {
 
     private boolean hasLabel(Task item, Label label) {
         for (String l : item.labels) {
-            if (l.equals(label.id)) {
+            if (l.equals(label.id())) {
                 return true;
             }
         }

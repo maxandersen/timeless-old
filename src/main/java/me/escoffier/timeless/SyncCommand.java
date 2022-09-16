@@ -47,7 +47,7 @@ public class SyncCommand implements Runnable {
                     .filter(other -> other != t && other.content.equalsIgnoreCase(content))
                     .findFirst();
             optional.ifPresent(task -> LOGGER.warnf("\uD83E\uDD14 Duplicate tasks found: %s (%s)", task.content,
-                    task.project == null ? "inbox" : task.project.name));
+                    task.project == null ? "inbox" : task.project.name()));
         }
 
     }

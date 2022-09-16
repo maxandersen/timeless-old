@@ -38,7 +38,7 @@ public class TodoistService implements Backend {
 
     @PostConstruct
     void fetch() {
-        SyncResponse response = todoist.sync(new SyncRequest());
+        SyncResponse response = todoist.sync(SyncRequest.INSTANCE);
 
         ZonedDateTime time = Instant.now().minus(Duration.ofDays(7))
                 .atZone(ZoneOffset.UTC)
@@ -47,38 +47,36 @@ public class TodoistService implements Backend {
         TodoistV9.CompletedTasksResponse completedTasks = v9.getCompletedTasks(new TodoistV9.CompletedTaskRequest(since));
 
         completed = completedTasks.toTasks();
-        inbox = response.projects.stream().filter(p -> p.name.equalsIgnoreCase("Inbox"))
+        inbox = response.projects().stream().filter(p -> p.name().equalsIgnoreCase("Inbox"))
                 .findFirst()
                 .orElseThrow();
 
-        projects = response.projects;
-        response.items.forEach(t -> t.project = getProjectPerId(t.project_id));
-        this.tasks = response.items;
-        labels = response.labels;
+        projects = response.projects();
+        response.items().forEach(t -> t.project = getProjectPerId(t.project_id));
+        this.tasks = response.items();
+        labels = response.labels();
     }
 
     public void addTask(String content, String deadline, Project project, int priority, List<String> labels, String description) {
-        Todoist.TaskCreationRequest request = new Todoist.TaskCreationRequest();
-        request.content = content;
-        request.description = description;
+        Todoist.TaskCreationRequest request = Todoist.TaskCreationRequest.create(content, null).withDescription(description);
 
         if (project != null) {
-            request.project_id = project.id;
+            request = request.withProject(project.id());
         }
         if (deadline != null) {
-            request.due_string = deadline;
+            request = request.withDue(deadline);
         }
         if (priority != -1) {
-            request.priority = priority;
+            request.withPriority(priority);
         }
         if (! labels.isEmpty()) {
-            request.labels.addAll(getLabelIds(labels));
+            request.withLabels(getLabelIds(labels));
         }
         todoist.addTask(request);
     }
 
     private List<String> getLabelIds(List<String> labels) {
-        return labels.stream().map(s -> getLabelByName(s).id).collect(Collectors.toList());
+        return labels.stream().map(s -> getLabelByName(s).id()).collect(Collectors.toList());
     }
 
     private Label getLabelByName(String name) {
@@ -93,12 +91,12 @@ public class TodoistService implements Backend {
     }
 
     public Project getProjectByName(String name) {
-        return projects.stream().filter(p -> p.name.equalsIgnoreCase(name)).findFirst()
-                .orElseThrow(() -> new RuntimeException("No project named " + name + " in " + projects.stream().map(p -> p.name).collect(Collectors.toList())));
+        return projects.stream().filter(p -> p.name().equalsIgnoreCase(name)).findFirst()
+                .orElseThrow(() -> new RuntimeException("No project named " + name + " in " + projects.stream().map(Project::name).toList()));
     }
 
     public Project getProjectPerId(String id) {
-        return projects.stream().filter(p -> p.id.equals(id)).findFirst().orElseThrow();
+        return projects.stream().filter(p -> p.id().equals(id)).findFirst().orElseThrow();
     }
 
     @Override
@@ -119,7 +117,7 @@ public class TodoistService implements Backend {
     @Override
     public List<Task> getAllMatchingTasks(Predicate<Task> predicate) {
         List<Task> active = getMatchingTasks(predicate);
-        List<Task> completed = this.completed.stream().filter(predicate).collect(Collectors.toList());
+        List<Task> completed = this.completed.stream().filter(predicate).toList();
 
         List<Task> result = new ArrayList<>();
         result.addAll(active);

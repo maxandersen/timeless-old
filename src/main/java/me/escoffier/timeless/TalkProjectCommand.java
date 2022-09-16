@@ -9,6 +9,7 @@ import picocli.CommandLine;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Collections;
 import java.util.Scanner;
 
 @ApplicationScoped
@@ -64,160 +65,129 @@ public class TalkProjectCommand implements Runnable {
         Project parent = getParentProject();
 
         System.out.println("⚙️  Creating project " + parentProjectName + "/" + eventName);
-        Todoist.ProjectCreationRequest pcr = new Todoist.ProjectCreationRequest();
-        pcr.name = eventName;
-        pcr.parent_id = parent.id;
+        Todoist.ProjectCreationRequest pcr = new Todoist.ProjectCreationRequest(eventName, parent.id());
         Project project = todoist.createProject(pcr);
 
-        System.out.println("project created: " + project.name + " (" + project.id + ")");
+        System.out.println("project created: " + project.name() + " (" + project.id() + ")");
         if (requireTravel) {
             System.out.println("⚙️  Creating travel section...");
-            Todoist.SectionCreationRequest scr = new Todoist.SectionCreationRequest("Travel", project.id);
+            Todoist.SectionCreationRequest scr = Todoist.SectionCreationRequest.create("Travel", project.id());
             Todoist.Section section = todoist.createSection(scr);
             // If travel - Estimate budget, Ask for budget, Wait for approval, Book travel, Book hotel, Add calendar slot (day - 7)
             System.out.println("⚙️  Creating travelling tasks...");
-            Todoist.TaskCreationRequest tcr = new Todoist.TaskCreationRequest();
-            tcr.content = eventName + " - Estimate travel budget";
-            tcr.project_id = project.id;
-            tcr.section_id = section.id;
+            Todoist.TaskCreationRequest tcr = Todoist.TaskCreationRequest.create(eventName + " - Estimate travel budget",
+                    project.id(), section.id());
             todoist.addTask(tcr);
 
-            tcr.content = eventName + " - Ask for budget";
+            tcr = tcr.withContent(eventName + " - Ask for budget");
             todoist.addTask(tcr);
 
-            tcr.content = eventName + " - Wait for project approval";
+            tcr = tcr.withContent(eventName + " - Wait for budget approval");
             todoist.addTask(tcr);
 
-            tcr.content = eventName + " - Book travel to " + location;
-            tcr.description = "Start date: " + startDate + " - End date: " + endDate;
+            tcr = tcr.withContent(eventName + " Book travel to " + location)
+                    .withDescription("Start date: " + startDate + " - End date: " + endDate);
             todoist.addTask(tcr);
 
-            tcr.content = eventName + " - Book hotel in " + location;
+            tcr = tcr.withContent(eventName + " - Book hotel in " + location);
             todoist.addTask(tcr);
 
-            tcr.content = eventName + " - Add calendar slot";
-            tcr.description = null;
-            tcr.due_string = "1 week before " + startDate;
+            tcr = tcr.withContent(eventName + " - Add calendar slot")
+                    .withDescription(null)
+                    .withDue("1 week before " + startDate);
             todoist.addTask(tcr);
 
-            tcr.content = eventName + " - Expense Report";
-            tcr.priority = 3;
-            tcr.due_string = "3 days after " + endDate;
+            tcr = tcr.withContent(eventName + " - Expense Report")
+                    .withDue("3 days after " + endDate).withPriority(3);
             todoist.addTask(tcr);
 
             System.out.println("⚙️  Travel section created!");
-
         }
 
         if (needSubmission) {
             System.out.println("⚙️  Creating CFP section...");
-            Todoist.SectionCreationRequest scr = new Todoist.SectionCreationRequest("CFP", project.id);
+            Todoist.SectionCreationRequest scr = Todoist.SectionCreationRequest.create("CFP", project.id());
             Todoist.Section section = todoist.createSection(scr);
             // If submission (CFP website + deadline) - Write abstract, Submit abstract, Save title/abstract, Wait for acceptance
             System.out.println("⚙️  Creating CFP tasks...");
-            Todoist.TaskCreationRequest tcr = new Todoist.TaskCreationRequest();
-            tcr.content = eventName + " - Write title and abstract";
-            tcr.project_id = project.id;
-            tcr.section_id = section.id;
-            tcr.due_string = "1 day before " + submissionDeadline;
+            Todoist.TaskCreationRequest tcr = Todoist.TaskCreationRequest.create(eventName + " - Write title and abstract", project.id(), section.id())
+                    .withDue("1 day before " + submissionDeadline);
             todoist.addTask(tcr);
 
-            tcr.content = eventName + " - Submit abstract and save it";
-            tcr.description = cfp;
+            tcr = tcr.withContent(eventName + " - Submit abstract and save it")
+                    .withDescription(cfp);
             todoist.addTask(tcr);
 
-            tcr.content = eventName + " - Wait for notification";
-            tcr.description = null;
-            tcr.due_string = null;
+            tcr = tcr.withContent(eventName + " - Wait for notification")
+                    .withDue(null);
             todoist.addTask(tcr);
 
             System.out.println("⚙️  CFP section created!");
         }
 
         System.out.println("⚙️  Creating Material section...");
-        Todoist.SectionCreationRequest scr = new Todoist.SectionCreationRequest("Material", project.id);
+        Todoist.SectionCreationRequest scr = Todoist.SectionCreationRequest.create("Material", project.id());
         Todoist.Section section = todoist.createSection(scr);
         //  Slide title !!3, Slide audience !!3, Slide talk details !!3 , Slide call for action !!3, Outline !!2,
         // Slides parts A, B, C !!1, Outline demo !!2, Implement demo !!1, Share demo + Add link to slides
         System.out.println("⚙️  Creating Material tasks...");
-        Todoist.TaskCreationRequest tcr = new Todoist.TaskCreationRequest();
-        tcr.content = eventName + " - Create slide deck files and directory";
-        tcr.project_id = project.id;
-        tcr.section_id = section.id;
-        tcr.priority = 3;
+        Todoist.TaskCreationRequest tcr = Todoist.TaskCreationRequest.create(eventName + " - Create slide deck files and directory", project.id(), section.id())
+                .withPriority(3);
         todoist.addTask(tcr);
 
-        tcr.priority = 2;
-        tcr.content = eventName + " - Title slide";
+        tcr = tcr.withContent(eventName + " - Write down the objective, the audience and the outline of the talk")
+                .withPriority(2);
+        todoist.addTask(tcr);
+        tcr = tcr.withContent(eventName + " -Write down the outline of the demo")
+                .withPriority(2);
         todoist.addTask(tcr);
 
-        tcr.content = eventName + " - Audience slide";
+        tcr = tcr.withContent(eventName + " -Define and write the call for action slide")
+                .withPriority(2);
         todoist.addTask(tcr);
 
-        tcr.content = eventName + " - Talk details slide";
+        tcr = tcr.withContent(eventName + " - Slide part A")
+                .withPriority(4);
+        todoist.addTask(tcr);
+        tcr = tcr.withContent(eventName + " - Slide part B")
+                .withPriority(4);
+        todoist.addTask(tcr);
+        tcr = tcr.withContent(eventName + " - Slide part C")
+                .withPriority(4);
         todoist.addTask(tcr);
 
-        tcr.priority = 3;
-        tcr.content = eventName + " - Outline of the talk";
+        tcr = tcr.withContent(eventName + " - Implement Demo part A")
+                .withPriority(4);
+        todoist.addTask(tcr);
+        tcr = tcr.withContent(eventName + " - Implement Demo part B")
+                .withPriority(4);
         todoist.addTask(tcr);
 
-        tcr.content = eventName + " - Outline of the demo";
-        todoist.addTask(tcr);
-
-        tcr.priority = 2;
-        tcr.content = eventName + " - Call for action slide";
-        todoist.addTask(tcr);
-
-        tcr.priority = 4;
-        tcr.content = eventName + " - Slide part A";
-        todoist.addTask(tcr);
-
-        tcr.content = eventName + " - Slide part B";
-        todoist.addTask(tcr);
-
-        tcr.content = eventName + " - Slide part C";
-        todoist.addTask(tcr);
-
-        tcr.content = eventName + " - Implement demo";
-        todoist.addTask(tcr);
-
-        tcr.priority = 1;
-        tcr.content = eventName + " - Share demo and add link to the slides";
+        tcr = tcr.withContent(eventName + " - Share demo and slides")
+                .withPriority(1)
+                .withDue("1 day after " + endDate);
         todoist.addTask(tcr);
 
         System.out.println("⚙️  Material section created!");
 
         System.out.println("⚙️  Creating Preparation section...");
-        scr = new Todoist.SectionCreationRequest("Preparation", project.id);
+        scr = Todoist.SectionCreationRequest.create("Preparation", project.id());
         section = todoist.createSection(scr);
 
         System.out.println("⚙️  Creating preparation tasks...");
-        tcr = new Todoist.TaskCreationRequest();
-        tcr.content = eventName + " - Dry Run 1";
-        tcr.project_id = project.id;
-        tcr.section_id = section.id;
-        tcr.priority = 4;
-        tcr.due_string = "2 days before " + startDate;
+        tcr = Todoist.TaskCreationRequest.create(eventName + " - Dry Run 1", project.id(), section.id())
+                .withDue("2 days before " + startDate)
+                .withPriority(4);
         todoist.addTask(tcr);
 
-        tcr.content = eventName + " - Dry Run 2";
-        tcr.due_string = "1 days before " + startDate;
+        tcr = tcr.withContent(eventName + " - Dry Run 2")
+                .withDue("1 days before " + startDate);
         todoist.addTask(tcr);
-
-        tcr.priority = 1;
-        if (endDate != null) {
-            tcr.due_string = endDate;
-        } else {
-            tcr.due_string = startDate;
-        }
-        tcr.content = eventName + " - Share slides";
-        todoist.addTask(tcr);
-
         System.out.println("\uD83D\uDE4C️  DONE!");
     }
 
     private Project getParentProject() {
-        return backend.getProjects().stream().filter(p -> p.name.equalsIgnoreCase(parentProjectName)).findAny()
+        return backend.getProjects().stream().filter(p -> p.name().equalsIgnoreCase(parentProjectName)).findAny()
                 .orElseThrow(() -> new RuntimeException("Unable to find the project " + parentProjectName));
     }
 

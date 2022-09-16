@@ -3,6 +3,7 @@ package me.escoffier.timeless.todoist;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import me.escoffier.timeless.model.Label;
 import me.escoffier.timeless.model.Project;
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -13,6 +14,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @RegisterRestClient(baseUri = "https://api.todoist.com")
@@ -62,54 +64,65 @@ public interface Todoist {
         return ConfigProvider.getConfig().getValue("todoist.token", String.class);
     }
 
-    class TaskCreationRequest {
+    record TaskCreationRequest(
+            String content,
+            @JsonProperty("due_string") String due,
+            int priority,
+            @JsonProperty("project_id") @JsonInclude(JsonInclude.Include.NON_DEFAULT) String project,
+            @JsonProperty("label_ids") @JsonInclude(JsonInclude.Include.NON_EMPTY) List<String> labels,
+            @JsonProperty("section_id") @JsonInclude(JsonInclude.Include.NON_DEFAULT) String section,
+            @JsonInclude(JsonInclude.Include.NON_EMPTY) String description
+    ) {
 
-        public String content;
-        public String due_string;
-        public int priority = 1;
+        public static TaskCreationRequest create(String content, String project, String section) {
+            return new TaskCreationRequest(content, null, 1, project, Collections.emptyList(), section, null);
+        }
 
-        @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-        public String project_id;
+        public static TaskCreationRequest create(String content, String project) {
+            return new TaskCreationRequest(content, null, 1, project, Collections.emptyList(), null, null);
+        }
 
-        @JsonProperty("label_ids")
-        @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        public List<String> labels = new ArrayList<>();
+        public TaskCreationRequest withDue(String due) {
+            return new TaskCreationRequest(content(), due, priority(), project(), labels(), section(), description());
+        }
 
-        @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-        public String section_id;
+        public TaskCreationRequest withPriority(int priority) {
+            return new TaskCreationRequest(content(), due(), priority, project(), labels(), section(), description());
+        }
 
-        @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        public String description;
+        public TaskCreationRequest withContent(String content) {
+            return new TaskCreationRequest(content, due(), priority(), project(), labels(), section(), description());
+        }
 
-    }
+        public TaskCreationRequest withDescription(String desc) {
+            return new TaskCreationRequest(content(), due(), priority(), project(), labels(), section(), desc);
+        }
 
-    class ProjectCreationRequest {
-        public String name;
-        public String parent_id;
-    }
+        public TaskCreationRequest withProject(String projectId) {
+            return new TaskCreationRequest(content(), due(), priority(), projectId, labels(), section(), description());
+        }
 
-    class SectionCreationRequest {
-        public String name;
-        public long project_id;
-
-        public SectionCreationRequest(String name, String project_id) {
-            this.name = name;
-            this.project_id = Long.parseLong(project_id);
+        public TaskCreationRequest withLabels(List<String> labels) {
+            return new TaskCreationRequest(content(), due(), priority(), project(), labels, section(), description());
         }
     }
 
-    class Section {
-        public String id;
-        public String project_id;
-        public String name;
+    record ProjectCreationRequest(String name, String parent_id) {
+
     }
 
-    class LabelCreationRequest {
-        public String name;
+    record SectionCreationRequest(String name, long project_id) {
 
-        public LabelCreationRequest(String name) {
-            this.name = name;
+        public static SectionCreationRequest create(String name, String project_id) {
+            return new SectionCreationRequest(name, Long.parseLong(project_id));
         }
+    }
+
+    record Section(String id, String project_id, String name) {
+
+    }
+
+    record LabelCreationRequest(String name) {
         //todo: order, color, favorite
     }
 

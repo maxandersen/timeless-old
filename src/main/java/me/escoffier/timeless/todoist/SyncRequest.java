@@ -5,11 +5,11 @@ import java.util.List;
 
 public class SyncRequest {
 
-    public String token;
-    public String sync_token;
-    public List<String> resource_types;
+    public final String token;
+    public final String sync_token;
+    public final List<String> resource_types;
 
-    public SyncRequest() {
+    private SyncRequest() {
         token = Todoist.token();
         sync_token = "*";
         resource_types = Arrays.asList("items", "projects", "labels");
