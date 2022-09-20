@@ -9,15 +9,15 @@ import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
 public class Task {
 
-    public long id;
+    public String id;
     public String content;
-    public long project_id;
+    public String project_id;
     public int priority;
     public String parentTaskId;
-    public int checked;
+    public boolean checked;
     public Due due;
     public String date_added;
-    public long[] labels;
+    public String[] labels;
 
     public Project project;
 
@@ -27,7 +27,7 @@ public class Task {
     }
 
     public boolean isCompleted() {
-        return checked == 1;
+        return checked;
     }
 
     public Instant getCreationDate() {
@@ -35,7 +35,7 @@ public class Task {
     }
 
     public boolean isInInbox() {
-        return project == null  || project.name.equalsIgnoreCase("inbox");
+        return project == null  || project.name().equalsIgnoreCase("inbox");
     }
 
     @Override

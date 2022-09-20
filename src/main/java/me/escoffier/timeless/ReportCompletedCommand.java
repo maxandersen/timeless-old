@@ -3,10 +3,9 @@ package me.escoffier.timeless;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import me.escoffier.timeless.model.Project;
-import me.escoffier.timeless.todoist.TodoistV8;
+import me.escoffier.timeless.todoist.TodoistV9;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.jboss.logging.Logger;
 import picocli.CommandLine;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -16,9 +15,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.time.temporal.ChronoField.HOUR_OF_DAY;
 import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
@@ -27,7 +24,8 @@ import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 @CommandLine.Command(name = "report", description = "List completed tasks over the past 8 days")
 public class ReportCompletedCommand implements Runnable {
 
-    @Inject @RestClient TodoistV8 todoist;
+    @Inject @RestClient
+    TodoistV9 todoist;
 
     @Inject @ConfigProperty(name = "report.excluded_projects") List<String> excludedProjects;
 
@@ -37,10 +35,10 @@ public class ReportCompletedCommand implements Runnable {
                 .atZone(ZoneOffset.UTC)
                 .with(HOUR_OF_DAY, 0).with(MINUTE_OF_HOUR, 0);
         String since = DateTimeFormatter.ISO_INSTANT.format(time);
-        TodoistV8.CompletedTaskRequest req = new TodoistV8.CompletedTaskRequest(since);
-        TodoistV8.CompletedTasksResponse resp = todoist.getCompletedTasks(req);
+        TodoistV9.CompletedTaskRequest req = new TodoistV9.CompletedTaskRequest(since);
+        TodoistV9.CompletedTasksResponse resp = todoist.getCompletedTasks(req);
         Map<String, Project> projects = resp.projects;
-        List<TodoistV8.CompletedItem> items = resp.items;
+        List<TodoistV9.CompletedItem> items = resp.items;
 
         ListMultimap<String, String> report = MultimapBuilder.treeKeys((Comparator<String>) (o1, o2) -> {
             if (o1.equalsIgnoreCase("inbox")  && o2.equalsIgnoreCase("inbox")) {
@@ -55,10 +53,10 @@ public class ReportCompletedCommand implements Runnable {
             return o1.compareTo(o2);
         }).arrayListValues().build();
 
-        for (TodoistV8.CompletedItem completed : items) {
+        for (TodoistV9.CompletedItem completed : items) {
             Project project = null;
-            if (completed.project_id > 0) {
-                project = projects.get(Long.toString(completed.project_id));
+            if (completed.project_id != null) {
+                project = projects.get(completed.project_id);
             }
 
             // Ignore dependabot
@@ -68,29 +66,44 @@ public class ReportCompletedCommand implements Runnable {
 
             if (project == null) {
                 report.put("inbox", completed.title());
-            } else if (!excludedProjects.contains(project.name)) {
+            } else if (!excludedProjects.contains(project.name())) {
                 String pn = getProjectName(projects, project);
                 report.put(pn, completed.title());
             }
         }
 
+        Set<String> added = new HashSet<>();
         report.asMap().forEach((key, value) -> {
             System.out.println("== " + key);
-            value.forEach(s -> System.out.println("    * " + s));
+            value.forEach(s -> {
+                String extracted = extract(s);
+                if (added.add(extracted)) {
+                    System.out.println("    * " + extracted);
+                }
+            });
             System.out.println();
         });
     }
 
-    private String getProjectName(Map<String, Project> projects, Project project) {
-        if (project.parent_id == null) {
-            return  project.name;
+
+
+    private String extract(String s) {
+        if (s.startsWith("[")  && s.lastIndexOf("]") != -1) {
+            return s.substring(1, s.lastIndexOf(("]")));
         }
-        Project parent = projects.values().stream().filter(p -> Long.toString(p.id).equalsIgnoreCase(project.parent_id)).findAny()
+        return s;
+    }
+
+    private String getProjectName(Map<String, Project> projects, Project project) {
+        if (project.parent() == null) {
+            return  project.name();
+        }
+        Project parent = projects.values().stream().filter(p -> p.id().equalsIgnoreCase(project.parent())).findAny()
                 .orElse(null);
         if (parent == null) {
-            return project.name;
+            return project.name();
         }
-        return parent.name + "/" + project.name;
+        return parent.name() + "/" + project.name();
     }
 
 }

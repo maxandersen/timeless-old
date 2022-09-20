@@ -1,13 +1,6 @@
 package me.escoffier.timeless.model;
 
-public class Label {
-
-    public String name;
-    public long id;
-
-    public Label() {
-        // Used by jsonb
-    }
+public record Label(String name, String id) {
 
     public String getShortName() {
         // iterative to find the first uppercase

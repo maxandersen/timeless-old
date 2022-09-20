@@ -2,7 +2,7 @@ package me.escoffier.timeless.review;
 
 import me.escoffier.timeless.model.Project;
 import me.escoffier.timeless.todoist.Todoist;
-import me.escoffier.timeless.todoist.TodoistV8;
+import me.escoffier.timeless.todoist.TodoistV9;
 import org.apache.commons.io.output.StringBuilderWriter;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
@@ -10,7 +10,6 @@ import org.commonmark.renderer.html.HtmlRenderer;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
@@ -26,11 +25,11 @@ import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 
 public class ReviewHelper {
 
-    public static void prepareWeeklyReview(String reviewProjectName, Todoist todoist, TodoistV8 todoistV8,
+    public static void prepareWeeklyReview(String reviewProjectName, Todoist todoist, TodoistV9 todoistV9,
             List<Project> projects) {
         Project weeklyReviewProject = null;
         for (Project project : projects) {
-            if (project.name.equalsIgnoreCase(reviewProjectName)) {
+            if (project.name().equalsIgnoreCase(reviewProjectName)) {
                 weeklyReviewProject = project;
                 break;
             }
@@ -39,15 +38,15 @@ public class ReviewHelper {
             throw new NoSuchElementException("Unable to find weekly review project: " + reviewProjectName);
         }
 
-        List<TodoistV8.CompletedItem> subTasks = new ArrayList<>();
+        List<TodoistV9.CompletedItem> subTasks = new ArrayList<>();
         ZonedDateTime time = Instant.now().minus(Duration.ofDays(10))
                 .atZone(ZoneOffset.UTC)
                 .with(HOUR_OF_DAY, 0).with(MINUTE_OF_HOUR, 0);
         String since = DateTimeFormatter.ISO_INSTANT.format(time);
-        TodoistV8.CompletedTasksResponse tasks = todoistV8
-                .getCompletedTasks(new TodoistV8.CompletedTaskRequest(since));
-        for (TodoistV8.CompletedItem item : tasks.items) {
-            if (item.project_id == weeklyReviewProject.id && item.completed_date != null) {
+        TodoistV9.CompletedTasksResponse tasks = todoistV9
+                .getCompletedTasks(new TodoistV9.CompletedTaskRequest(since));
+        for (TodoistV9.CompletedItem item : tasks.items) {
+            if (item.project_id.equals(weeklyReviewProject.id()) && item.completed_date != null) {
                 subTasks.add(item);
             }
         }
@@ -62,6 +61,6 @@ public class ReviewHelper {
         HtmlRenderer renderer = HtmlRenderer.builder().build();
         StringBuilderWriter report = new StringBuilderWriter();
         renderer.render(document, report);
-        Files.write(new File("weekly.html").toPath(), report.toString().getBytes(StandardCharsets.UTF_8));
+        Files.writeString(new File("weekly.html").toPath(), report.toString());
     }
 }
