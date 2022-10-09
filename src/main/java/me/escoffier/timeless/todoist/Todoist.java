@@ -42,7 +42,7 @@ public interface Todoist {
     Label createLabel(LabelCreationRequest request);
 
     @POST
-    @Path("/rest/v1/sections") // Stay on v1, failing on v2.
+    @Path("/rest/v2/sections")
     @ClientHeaderParam(name = "Authorization", value = "{lookupAuth}")
     Section createSection(SectionCreationRequest request);
 
@@ -111,10 +111,10 @@ public interface Todoist {
 
     }
 
-    record SectionCreationRequest(String name, long project_id) {
+    record SectionCreationRequest(String name, String project_id) {
 
         public static SectionCreationRequest create(String name, String project_id) {
-            return new SectionCreationRequest(name, Long.parseLong(project_id));
+            return new SectionCreationRequest(name, project_id);
         }
     }
 

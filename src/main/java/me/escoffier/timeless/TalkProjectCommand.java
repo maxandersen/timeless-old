@@ -9,7 +9,6 @@ import picocli.CommandLine;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Collections;
 import java.util.Scanner;
 
 @ApplicationScoped
@@ -61,6 +60,11 @@ public class TalkProjectCommand implements Runnable {
 
         // ----
 
+        String eventDate = startDate;
+        if (endDate != null) {
+            eventDate = endDate;
+        }
+
         System.out.println("⚙️  Generating project for " + eventName + "...");
         Project parent = getParentProject();
 
@@ -98,7 +102,7 @@ public class TalkProjectCommand implements Runnable {
             todoist.addTask(tcr);
 
             tcr = tcr.withContent(eventName + " - Expense Report")
-                    .withDue("3 days after " + endDate).withPriority(3);
+                    .withDue("3 days after " + eventDate).withPriority(3);
             todoist.addTask(tcr);
 
             System.out.println("⚙️  Travel section created!");
@@ -128,9 +132,7 @@ public class TalkProjectCommand implements Runnable {
         System.out.println("⚙️  Creating Material section...");
         Todoist.SectionCreationRequest scr = Todoist.SectionCreationRequest.create("Material", project.id());
         Todoist.Section section = todoist.createSection(scr);
-        //  Slide title !!3, Slide audience !!3, Slide talk details !!3 , Slide call for action !!3, Outline !!2,
-        // Slides parts A, B, C !!1, Outline demo !!2, Implement demo !!1, Share demo + Add link to slides
-        System.out.println("⚙️  Creating Material tasks...");
+        System.out.println("⚙️  Creating Material tasks in  section " + section.name() + "(" + section.id() + ")");
         Todoist.TaskCreationRequest tcr = Todoist.TaskCreationRequest.create(eventName + " - Create slide deck files and directory", project.id(), section.id())
                 .withPriority(3);
         todoist.addTask(tcr);
@@ -165,7 +167,7 @@ public class TalkProjectCommand implements Runnable {
 
         tcr = tcr.withContent(eventName + " - Share demo and slides")
                 .withPriority(1)
-                .withDue("1 day after " + endDate);
+                .withDue("1 day after " + eventDate);
         todoist.addTask(tcr);
 
         System.out.println("⚙️  Material section created!");
