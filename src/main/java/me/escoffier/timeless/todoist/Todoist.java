@@ -24,6 +24,7 @@ public interface Todoist {
 
     @POST
     @Path("/sync/v9/sync")
+    @ClientHeaderParam(name = "Authorization", value = "{lookupAuth}")
     SyncResponse sync(SyncRequest request);
 
     @POST
