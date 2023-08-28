@@ -1,12 +1,12 @@
 package me.escoffier.timeless.todoist;
 
+import jakarta.annotation.PostConstruct;
 import me.escoffier.timeless.model.*;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;

@@ -1,5 +1,6 @@
 package me.escoffier.timeless.inboxes.github;
 
+import jakarta.annotation.PostConstruct;
 import me.escoffier.timeless.helpers.ProjectHints;
 import me.escoffier.timeless.model.Backend;
 import me.escoffier.timeless.model.Inbox;
@@ -12,8 +13,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.*;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +76,7 @@ public class GithubService implements Inbox {
 
     @Retry
     @Timeout(10000)
-    private void getPullRequestForProjects(GitHub github, List<GHPullRequest> prs, CountDownLatch latch, String repo) {
+    void getPullRequestForProjects(GitHub github, List<GHPullRequest> prs, CountDownLatch latch, String repo) {
         try {
             GHRepository repository = github.getRepository(repo);
             prs.addAll(repository.getPullRequests(GHIssueState.OPEN));

@@ -8,6 +8,7 @@ import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import io.quarkus.arc.log.LoggerName;
+import jakarta.annotation.PostConstruct;
 import me.escoffier.timeless.model.Backend;
 import me.escoffier.timeless.model.Inbox;
 import me.escoffier.timeless.model.NewTaskRequest;
@@ -15,8 +16,7 @@ import me.escoffier.timeless.model.Task;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -72,6 +72,7 @@ public class JiraService implements Inbox {
             throw new IllegalStateException("Neither jira.password nor jira.token set");
         }
 
+        LOGGER.infof("\uD83D\uDEB6 Retrieving Jira issues %s", jiraQuery);
         SearchResult searchResultsAll = jira.getSearchClient().searchJql(jiraQuery).claim();
         searchResultsAll.getIssues().forEach(issue -> {
             JiraIssue ji = toIssue(issue);

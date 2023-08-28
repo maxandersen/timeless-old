@@ -1,15 +1,15 @@
 package me.escoffier.timeless.inboxes.google;
 
 import com.google.api.services.drive.model.*;
+import jakarta.annotation.PostConstruct;
 import me.escoffier.timeless.model.Backend;
 import me.escoffier.timeless.model.Inbox;
 import me.escoffier.timeless.model.NewTaskRequest;
 import me.escoffier.timeless.model.Task;
 import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.io.IOException;
 import java.util.*;
 
@@ -126,7 +126,7 @@ public class GoogleDriveService implements Inbox {
     }
 
     @PostConstruct
-    public List<UnresolvedComment> fetch() {
+    public void fetch() {
         logger.info("\uD83D\uDEB6  Retrieving follow-up tasks from Google Drive...");
         Set<UnresolvedComment> comments = new HashSet<>();
         try {
@@ -139,7 +139,6 @@ public class GoogleDriveService implements Inbox {
 
             fetched = new ArrayList<>(comments);
             logger.infof("\uD83D\uDEB6  %d unresolved comments from Google Drive retrieved", fetched.size());
-            return fetched;
         } catch (Exception e) {
             throw new IllegalStateException("\uD83D\uDC7F Unable to retrieve messages from Google Drive", e);
         }

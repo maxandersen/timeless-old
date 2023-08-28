@@ -3,6 +3,7 @@ package me.escoffier.timeless.inboxes.google;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventAttendee;
+import jakarta.annotation.PostConstruct;
 import me.escoffier.timeless.helpers.ProjectHints;
 import me.escoffier.timeless.model.Backend;
 import me.escoffier.timeless.model.Inbox;
@@ -11,9 +12,8 @@ import me.escoffier.timeless.model.Task;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -80,7 +80,7 @@ public class CalendarService implements Inbox {
     }
 
     @PostConstruct
-    public List<Meeting> fetch() {
+    public void fetch() {
         logger.info("\uD83D\uDEB6  Retrieving meeting from Google Calendars...");
         List<Meeting> messages = new ArrayList<>();
         for (Account account : accounts.accounts().values()) {
@@ -89,7 +89,6 @@ public class CalendarService implements Inbox {
         fetched = new ArrayList<>(messages);
         removeIgnoredMeetings(fetched);
         logger.infof("\uD83D\uDEB6  %d meetings retrieved", fetched.size());
-        return fetched;
     }
 
     private void removeIgnoredMeetings(List<Meeting> fetched) {
